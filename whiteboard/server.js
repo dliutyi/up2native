@@ -10,6 +10,6 @@ app.use(webpackDevMiddleware(compiler, {
     publicPath: config.output.publicPath
 }));
 
-app.listen(3000, "192.168.0.109", function(){
+app.listen(3000, "0.0.0.0", function(){
     console.log("Example app listening on port 3000!\n");
 });
