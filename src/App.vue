@@ -1,7 +1,9 @@
 <template>
     <div 
         id="app" 
-        v-on:mousedown="handleClick" 
+        v-on:mousedown="handleMouseDown" 
+        v-on:mouseup="handleMouseUp"
+        v-on:mousemove="handleMouseMove"
         v-bind:style="appStyle"
         >
         <component 
@@ -11,6 +13,7 @@
             v-bind:top="obj.y" 
             v-bind:left="obj.x"
             v-on:handleObjClick="handleObjClick"
+            v-on:handleObjDrag="handleObjDrag"
             >
         </component>
     </div>
@@ -26,7 +29,8 @@ export default {
             width: 0,
             height: 0,
             objs: [],
-            resetFocus: null 
+            resetFocus: null,
+            dragging: null
         }
     },
     created(){
@@ -40,7 +44,7 @@ export default {
             this.width = window.innerWidth;
             this.height = window.innerHeight;
         },
-        handleClick(event){
+        handleMouseDown(event){
             if(this.resetFocus != null){
                 this.resetFocus();
                 this.resetFocus = null;
@@ -49,6 +53,16 @@ export default {
 
             this.objs.push({ type: "DragableText", x: event.pageX, y: event.pageY });
         },
+        handleMouseMove(event){
+            if(this.dragging != null){
+                this.dragging.move(event);
+            }
+        },
+        handleMouseUp(event){
+            if(this.dragging != null){
+                this.dragging.up(event);
+            }
+        },
         handleObjClick(value){
             if(this.resetFocus != null){
                 this.resetFocus();
@@ -56,6 +70,9 @@ export default {
 
             value.focus();
             this.resetFocus = value.unfocus;
+        },
+        handleObjDrag(value){
+            this.dragging = value;
         }
     },
     computed: {

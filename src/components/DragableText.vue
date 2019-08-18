@@ -1,7 +1,7 @@
 <template>
     <div
         id="dragabletext" 
-        v-on:mousedown.stop="handleClick" 
+        v-on:mousedown.stop="handleMouseDown" 
         v-on:mouseover="handleHover(true)" 
         v-on:mouseout="handleHover(false)" 
         v-bind:style="style"
@@ -18,8 +18,17 @@ export default {
         return {
             defaultText: "default text",
             color: "transparent",
-            isActive: false
+            isActive: false,
+            moving: { isActive: false, x: 0, y: 0 },
+            x: 0,
+            y: 0,
+            offsetX: 5,
+            offsetY: 5
         }
+    },
+    created() {
+        this.y = this.top - this.offsetX;
+        this.x = this.left - this.offsetY;
     },
     methods: {
         handleHover(isHover){
@@ -27,8 +36,22 @@ export default {
                 this.color = isHover ? "#AAAAFF" : "transparent";
             }
         },
-        handleClick(event){
+        handleMouseDown(event){
+            this.moving.isActive = true;
+            this.moving.x = event.offsetX;
+            this.moving.y = event.offsetY;
+
             this.$emit("handleObjClick", { focus: this.callbackFocus, unfocus: this.callbackUnfocus });
+            this.$emit("handleObjDrag", { move: this.handleMouseMove, up: this.handleMouseUp });
+        },
+        handleMouseUp(event){
+            this.moving.isActive = false;
+        },
+        handleMouseMove(event){
+            if(this.moving.isActive){
+                this.y = event.pageY - this.moving.y;
+                this.x = event.pageX - this.moving.x;
+            }
         },
         callbackFocus(text){
             this.isActive = true;
@@ -42,8 +65,8 @@ export default {
     computed: {
         style(){
             return{
-                top: this.top + "px",
-                left: this.left + "px",
+                top: this.y + "px",
+                left: this.x + "px",
                 border: "1px outset " + this.color
             }
         }
@@ -61,5 +84,15 @@ export default {
     border: none  
     font: 27pt serif
     box-sizing: border-box
+    cursor: default
+
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: -moz-none;
+    -o-user-select: none;
+    user-select: none;
+
+#dragabletext
+    cursor: pointer
 
 </style>
