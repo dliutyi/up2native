@@ -10,6 +10,7 @@
             v-bind:is="obj.type" 
             v-bind:top="obj.y" 
             v-bind:left="obj.x"
+            v-on:handleObjClick="handleObjClick"
             >
         </component>
     </div>
@@ -24,7 +25,8 @@ export default {
         return {
             width: 0,
             height: 0,
-            objs: []
+            objs: [],
+            resetFocus: null 
         }
     },
     created(){
@@ -39,7 +41,21 @@ export default {
             this.height = window.innerHeight;
         },
         handleClick(event){
+            if(this.resetFocus != null){
+                this.resetFocus();
+                this.resetFocus = null;
+                return;
+            }
+
             this.objs.push({ type: "DragableText", x: event.pageX, y: event.pageY });
+        },
+        handleObjClick(value){
+            if(this.resetFocus != null){
+                this.resetFocus();
+            }
+
+            value.focus();
+            this.resetFocus = value.unfocus;
         }
     },
     computed: {
