@@ -4,9 +4,11 @@
         v-on:mousedown.stop="handleMouseDown" 
         v-on:mouseover="handleHover(true)" 
         v-on:mouseout="handleHover(false)" 
+        v-on:dblclick="handleDblClick"
         v-bind:style="style"
         >
-        {{ defaultText }}
+        <textarea v-on:mousedown.stop="{}" v-if="editable" v-model="defaultText"></textarea>
+        <div v-else>{{ defaultText }}</div>
     </div>
 </template>
 
@@ -23,7 +25,8 @@ export default {
             x: 0,
             y: 0,
             offsetX: 5,
-            offsetY: 5
+            offsetY: 5,
+            editable: false
         }
     },
     created() {
@@ -53,6 +56,9 @@ export default {
                 this.x = event.pageX - this.moving.x;
             }
         },
+        handleDblClick(event){
+            this.editable = true;
+        },
         callbackFocus(text){
             this.isActive = true;
             this.color = "#0000FF";
@@ -60,6 +66,7 @@ export default {
         callbackUnfocus(text){
             this.isActive = false;
             this.color = "transparent";
+            this.editable = false;
         }
     },
     computed: {
@@ -86,13 +93,26 @@ export default {
     box-sizing: border-box
     cursor: default
 
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: -moz-none;
-    -o-user-select: none;
-    user-select: none;
+    -webkit-user-select: none
+    -khtml-user-select: none
+    -moz-user-select: -moz-none
+    -o-user-select: none
+    user-select: none
 
-#dragabletext
+#dragabletext div
+    overflow-wrap: nowrap
+    white-space: pre
+
+#dragabletext:hover
     cursor: pointer
+
+#dragabletext textarea
+    font: 27pt serif
+    border: none
+    background: transparent
+    resize: none
+    overflow: hidden
+    outline: none
+
 
 </style>
