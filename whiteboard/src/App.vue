@@ -22,6 +22,12 @@
 <script>
 
 import DragableText from "./components/DragableText.vue"
+import Drawing from "./components/Drawing.vue"
+
+class Instruments{
+    static DragableText = "DragableText";
+    static Drawing = "Drawing";
+}
 
 export default {
     data() {
@@ -30,14 +36,16 @@ export default {
             height: 0,
             objs: [],
             resetFocus: null,
-            dragging: null
+            dragging: null,
+            selectedInstrument: Instruments.Drawing
         }
     },
     created(){
         this.handleResize();
     },
     components: {
-        DragableText
+        DragableText,
+        Drawing
     },
     methods: {
         handleResize(){
@@ -51,7 +59,7 @@ export default {
                 return;
             }
 
-            this.objs.push({ type: "DragableText", x: event.pageX, y: event.pageY });
+            this.objs.push({ type: this.selectedInstrument, x: event.pageX, y: event.pageY });
         },
         handleMouseMove(event){
             if(this.dragging != null){
