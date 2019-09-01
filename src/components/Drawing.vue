@@ -55,19 +55,44 @@ export default {
                 this.color = isHover ? "#AAAAFF" : "transparent";
             }
         },
+        resizeWindow(event){
+            console.log("resizeWindow");
+
+            window.removeEventListener("resize", this.resizeWindow);
+
+            this.context.clearRect(0, 0, this.width, this.height);
+
+            this.context.beginPath();
+            this.context.moveTo(this.dots[0].x - this.x, this.dots[0].y - this.y);
+            for(let dot of this.dots){
+                this.context.lineTo(dot.x - this.x, dot.y - this.y);
+            }
+            this.context.stroke();
+        },
         handleMouseDown(event){
+            window.addEventListener("resize", this.resizeWindow);
+
             this.moving.isActive = true;
             this.$emit("handleObjClick", { focus: this.callbackFocus, unfocus: this.callbackUnfocus });
         },
         handleMouseUp(event){
             this.moving.isActive = false;
+
+            let aabb = this.getBoundingBox();
+
+            console.log(aabb.LeftUp.x + " " + aabb.LeftUp.y);
+            console.log(aabb.RightDown.x + " " + aabb.RightDown.y);
+
+            this.x = aabb.LeftUp.x;
+            this.y = aabb.LeftUp.y;
+            this.width = aabb.RightDown.x - aabb.LeftUp.x;
+            this.height = aabb.RightDown.y - aabb.LeftUp.y;
         },
         handleMouseMove(event){
             if(this.moving.isActive){
-                console.log("drawing moving");
-
                 this.context.lineTo(event.pageX, event.pageY);
                 this.context.stroke();
+
                 this.dots.push({ x: event.pageX, y: event.pageY });
             }
         },
@@ -82,6 +107,27 @@ export default {
             this.isActive = false;
             this.color = "transparent";
             this.editable = false;
+        },
+        getBoundingBox(){
+            let leftUp = { x: this.width, y: this.height };
+            let rightDown = { x: 0, y: 0 };
+            
+            for(let dot of this.dots){
+                if(dot.x < leftUp.x){
+                    leftUp.x = dot.x;
+                }
+                if(dot.y < leftUp.y){
+                    leftUp.y = dot.y;
+                }
+                if(dot.x > rightDown.x){
+                    rightDown.x = dot.x;
+                }
+                if(dot.y > rightDown.y){
+                    rightDown.y = dot.y;
+                }
+            }
+
+            return { LeftUp: leftUp, RightDown: rightDown };
         }
     },
     computed: {
@@ -89,9 +135,12 @@ export default {
             return{	
                 position: "absolute",	
                 width: this.width + "px",	
-                height: this.height + "px",	
+                height: this.height + "px",
+                top: this.y + "px",
+                left: this.x + "px",	
                 transformOrigin: "0px 0px",	
-                transform: "scale(1, 1)"	
+                transform: "scale(1, 1)",
+                border: "1px outset " + this.color	
             }	
         }
     },
