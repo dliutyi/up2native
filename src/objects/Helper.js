@@ -14,4 +14,14 @@ class XY{
     }
 }
 
-export { BoundingBox, XY }
+const debounce = (callback, delay) => {
+    let inDebounce;
+    return function(){
+        const context = this;
+        const args = arguments;
+        clearTimeout(inDebounce);
+        inDebounce = setTimeout(() => callback.apply(context, args), delay);
+    }
+}
+
+export { BoundingBox, XY, debounce }
