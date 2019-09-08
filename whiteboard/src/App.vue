@@ -10,6 +10,7 @@
             v-for="(obj, index) in objs" 
             v-bind:key="index" 
             v-bind:is="obj.type" 
+            v-bind:id="obj.id"
             v-bind:top="obj.y" 
             v-bind:left="obj.x"
             v-on:handleObjClick="handleObjClick"
@@ -32,6 +33,7 @@ class Instruments{
 export default {
     data() {
         return {
+            els: 0,
             width: 0,
             height: 0,
             objs: [],
@@ -59,7 +61,10 @@ export default {
                 return;
             }
 
-            this.objs.push({ type: this.selectedInstrument, x: event.pageX, y: event.pageY });
+            this.els = this.els + 1;
+            const uid = "el" + this.els;
+
+            this.objs.push({ type: this.selectedInstrument, x: event.pageX, y: event.pageY, id: uid });
         },
         handleMouseMove(event){
             if(this.dragging != null){

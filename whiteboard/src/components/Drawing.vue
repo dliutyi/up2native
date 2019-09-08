@@ -1,9 +1,9 @@
 <template>
     <canvas
-        id="drawing" 
         v-on:mousedown.stop="handleMouseDown" 
         v-on:mouseover="handleHover(true)" 
         v-on:mouseout="handleHover(false)" 
+        v-bind:id="id" 
         v-bind:width="width"
         v-bind:height="height"
         v-bind:style="style"
@@ -13,13 +13,15 @@
 
 <script>
 
+import { debounce } from "./../objects/Helper.js";
+
 export default {
     name: "drawing",
     data() {
         return {
             color: "transparent",
             isActive: false,
-            moving: { isActive: false },
+            moving: { isActive: false, isFocus: false },
             x: 0,
             y: 0,
             width: 0,
@@ -27,7 +29,8 @@ export default {
             editable: false,
             canvas: null,
             context: null,
-            dots: []
+            dots: [],
+            redrawDrawings: null
         }
     },
     created() {
@@ -35,11 +38,13 @@ export default {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         this.dots.push({ x: this.left, y: this.top });
+
+        this.redrawDrawings = debounce(this.handleDeboubcing, 10);
     },
     mounted(){
         this.moving.isActive = true;
 
-        this.canvas = document.getElementById("drawing");
+        this.canvas = document.getElementById(this.id);
         this.context = this.canvas.getContext("2d");
 
         this.context.clearRect(0, 0, this.width, this.height);
@@ -47,7 +52,7 @@ export default {
         this.context.beginPath();
         this.context.moveTo(this.dots[0].x, this.dots[0].y);
 
-        this.$emit("handleObjDrag", { move: this.handleMouseMove, up: this.handleMouseUp });
+        this.$emit("handleObjDrag", { move: this.handleDrawingMove, up: this.handleDrawingEnd });
     },
     methods: {
         handleHover(isHover){
@@ -55,7 +60,7 @@ export default {
                 this.color = isHover ? "#AAAAFF" : "transparent";
             }
         },
-        resizeWindow(event){
+        handleDeboubcing(event){
             console.log("resizeWindow");
 
             window.removeEventListener("resize", this.resizeWindow);
@@ -70,30 +75,45 @@ export default {
             this.context.stroke();
         },
         handleMouseDown(event){
-            window.addEventListener("resize", this.resizeWindow);
+            this.moving.isFocus = true;
+            this.moving.x = event.offsetX;
+            this.moving.y = event.offsetY;
 
-            this.moving.isActive = true;
             this.$emit("handleObjClick", { focus: this.callbackFocus, unfocus: this.callbackUnfocus });
+            this.$emit("handleObjDrag", { move: this.handleMouseMove, up: this.handleMouseUp });
         },
         handleMouseUp(event){
-            this.moving.isActive = false;
-
-            let aabb = this.getBoundingBox();
-
-            console.log(aabb.LeftUp.x + " " + aabb.LeftUp.y);
-            console.log(aabb.RightDown.x + " " + aabb.RightDown.y);
-
-            this.x = aabb.LeftUp.x;
-            this.y = aabb.LeftUp.y;
-            this.width = aabb.RightDown.x - aabb.LeftUp.x;
-            this.height = aabb.RightDown.y - aabb.LeftUp.y;
+            this.moving.isFocus = false;
         },
-        handleMouseMove(event){
+        handleDrawingEnd(event){
+            if(this.moving.isActive){
+                this.moving.isActive = false;
+
+                let aabb = this.getBoundingBox();
+
+                console.log(aabb.LeftUp.x + " " + aabb.LeftUp.y);
+                console.log(aabb.RightDown.x + " " + aabb.RightDown.y);
+
+                this.x = aabb.LeftUp.x;
+                this.y = aabb.LeftUp.y;
+                this.width = aabb.RightDown.x - aabb.LeftUp.x;
+                this.height = aabb.RightDown.y - aabb.LeftUp.y;
+
+                this.redrawDrawings();
+            }
+        },
+        handleDrawingMove(event){
             if(this.moving.isActive){
                 this.context.lineTo(event.pageX, event.pageY);
                 this.context.stroke();
 
                 this.dots.push({ x: event.pageX, y: event.pageY });
+            }
+        },
+        handleMouseMove(event){
+            if(this.moving.isFocus){
+                this.y = event.pageY - this.moving.y;
+                this.x = event.pageX - this.moving.x;
             }
         },
         handleDblClick(event){
@@ -138,13 +158,11 @@ export default {
                 height: this.height + "px",
                 top: this.y + "px",
                 left: this.x + "px",	
-                transformOrigin: "0px 0px",	
-                transform: "scale(1, 1)",
                 border: "1px outset " + this.color	
             }	
         }
     },
-    props: ["top", "left"]
+    props: ["top", "left", "id"]
 };
 
 </script>

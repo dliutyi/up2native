@@ -1,10 +1,10 @@
 <template>
     <div
-        id="dragabletext" 
         v-on:mousedown.stop="handleMouseDown" 
         v-on:mouseover="handleHover(true)" 
         v-on:mouseout="handleHover(false)" 
         v-on:dblclick="handleDblClick"
+        v-bind:id="id" 
         v-bind:style="style"
         >
         <textarea v-on:mousedown.stop="{}" v-if="editable" v-model="defaultText"></textarea>
@@ -78,7 +78,7 @@ export default {
             }
         }
     },
-    props: ["top", "left"]
+    props: ["top", "left", "id"]
 };
 
 </script>
