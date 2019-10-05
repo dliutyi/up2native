@@ -8,8 +8,8 @@
         v-bind:style="style"
         class="dragabletext"
         >
-        <textarea v-on:mousedown.stop="{}" v-if="editable" v-model="defaultText"></textarea>
-        <div v-else>{{ defaultText }}</div>
+        <textarea wrap="off" ref="textareaText" v-on:mousedown.stop="{}" v-if="editable" v-model="text" v-bind:style="textareaStyle"></textarea>
+        <div ref="divText" v-else>{{ text }}</div>
     </div>
 </template>
 
@@ -25,6 +25,8 @@ export default {
             moving: { isActive: false, x: 0, y: 0 },
             x: 0,
             y: 0,
+            textWidth: 0,
+            textHeight: 0,
             offsetX: 5,
             offsetY: 5,
             editable: false
@@ -58,7 +60,16 @@ export default {
             }
         },
         handleDblClick(event){
+            if(this.editable){
+                return;
+            }
+
+            const el = this.$refs.divText;
+            this.textWidth = el.clientWidth;
+            this.textHeight = el.clientHeight;
+
             this.editable = true;
+            this.$nextTick(() => this.$refs.textareaText.focus());      
         },
         callbackFocus(text){
             this.isActive = true;
@@ -68,11 +79,38 @@ export default {
             this.isActive = false;
             this.color = "transparent";
             this.editable = false;
+            this.defaultText = this.defaultText.trim();
+        },
+        adjustTextarea(){
+            if(!this.editable){
+                return;
+            }
+
+            const textareaEl = this.$refs.textareaText;
+            textareaEl.style.width = 0;
+            textareaEl.style.width = textareaEl.scrollWidth + "px";
+            textareaEl.style.height = 0;
+            textareaEl.style.height = textareaEl.scrollHeight + "px";
         }
     },
     computed: {
+        text: {
+            set: function(value){
+                this.defaultText = value;
+                this.adjustTextarea();
+            },
+            get: function(){
+                return this.defaultText;
+            }
+        },
+        textareaStyle(){
+            return {
+                width: this.textWidth + "px",
+                height: this.textHeight + "px"
+            }
+        },
         style(){
-            return{
+            return {
                 top: this.y + "px",
                 left: this.x + "px",
                 border: "1px outset " + this.color
@@ -88,7 +126,6 @@ export default {
 
 .dragabletext
     position: absolute
-    padding: 5px
     border: none  
     font: 27pt serif
     box-sizing: border-box
@@ -101,6 +138,7 @@ export default {
     user-select: none
 
 .dragabletext div
+    margin: 5px;
     overflow-wrap: nowrap
     white-space: pre
 
@@ -108,12 +146,14 @@ export default {
     cursor: pointer
 
 .dragabletext textarea
+    margin: 3px;
     font: 27pt serif
     border: none
     background: transparent
     resize: none
     overflow: hidden
     outline: none
+    vertical-align: top
 
 
 </style>

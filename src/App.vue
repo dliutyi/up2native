@@ -39,7 +39,7 @@ export default {
             objs: [],
             resetFocus: null,
             dragging: null,
-            selectedInstrument: Instruments.Drawing
+            selectedInstrument: Instruments.DragableText
         }
     },
     created(){
