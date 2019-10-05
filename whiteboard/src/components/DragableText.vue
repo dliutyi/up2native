@@ -6,6 +6,7 @@
         v-on:dblclick="handleDblClick"
         v-bind:id="id" 
         v-bind:style="style"
+        class="dragabletext"
         >
         <textarea v-on:mousedown.stop="{}" v-if="editable" v-model="defaultText"></textarea>
         <div v-else>{{ defaultText }}</div>
@@ -85,7 +86,7 @@ export default {
 
 <style lang="sass">
 
-#dragabletext
+.dragabletext
     position: absolute
     padding: 5px
     border: none  
@@ -99,14 +100,14 @@ export default {
     -o-user-select: none
     user-select: none
 
-#dragabletext div
+.dragabletext div
     overflow-wrap: nowrap
     white-space: pre
 
-#dragabletext:hover
+.dragabletext:hover
     cursor: pointer
 
-#dragabletext textarea
+.dragabletext textarea
     font: 27pt serif
     border: none
     background: transparent
