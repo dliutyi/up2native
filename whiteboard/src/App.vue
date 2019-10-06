@@ -6,6 +6,7 @@
         v-on:mousemove="handleMouseMove"
         v-bind:style="appStyle"
         >
+        <canvas id="background" v-bind:width="maxWidth" v-bind:height="maxHeight"></canvas>
         <div id="menu">
             <img 
                 v-bind:src="require('./images/text.svg')" 
@@ -65,6 +66,7 @@ export default {
     },
     mounted(){
         this.handleResize();
+        this.handleBackground();
     },
     components: {
         DragableText,
@@ -75,6 +77,27 @@ export default {
             const centerX = (this.maxWidth - window.innerWidth) / 2;
             const centerY = (this.maxHeight - window.innerHeight) / 2;
             window.scroll(centerX, centerY);
+        },
+        handleBackground(){
+            let canvas = document.getElementById("background");
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, this.maxWidth, this.maxHeight);
+            context.fillStyle = "white";
+            context.fillRect(0, 0, this.maxWidth, this.maxHeight);
+            context.strokeStyle = "#efefef";
+            let step = 20;
+            for(let i = step; i < this.maxWidth; i += step){
+                context.beginPath();
+                context.moveTo(i, 0);
+                context.lineTo(i, this.maxHeight);
+                context.stroke();
+            }
+            for(let i = step; i < this.maxHeight; i += step){
+                context.beginPath();
+                context.moveTo(0, i);
+                context.lineTo(this.maxWidth, i);
+                context.stroke();
+            }
         },
         handleMenuClick(item){
             this.selectedInstrument = item;
@@ -141,6 +164,9 @@ export default {
     background: #FAFAFA
     font-size: 18px
     font-family: "Roboto", sans-serif
+
+#app canvas
+    position: absolute
 
 #menu
     position: fixed
