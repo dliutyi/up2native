@@ -6,6 +6,23 @@
         v-on:mousemove="handleMouseMove"
         v-bind:style="appStyle"
         >
+        <div id="menu">
+            <img 
+                v-bind:src="require('./images/text.svg')" 
+                v-bind:style="dragabletextOn"
+                v-on:mousedown.stop="" 
+                v-on:mouseup.stop="" 
+                v-on:mousemove.stop="" 
+                v-on:click.stop="handleMenuClick('DragableText')" 
+                />
+            <img 
+                v-bind:src="require('./images/draw.svg')" 
+                v-bind:style="drawingOn"
+                v-on:mousedown.stop="" 
+                v-on:mouseup.stop="" 
+                v-on:mousemove.stop="" 
+                v-on:click.stop="handleMenuClick('Drawing')" />
+        </div>
         <component 
             v-for="(obj, index) in objs" 
             v-bind:key="index" 
@@ -41,7 +58,7 @@ export default {
             objs: [],
             resetFocus: null,
             dragging: null,
-            selectedInstrument: Instruments.Drawing,
+            selectedInstrument: Instruments.DragableText,
             maxWidth: 3000,
             maxHeight: 3000
         }
@@ -58,6 +75,9 @@ export default {
             const centerX = (this.maxWidth - window.innerWidth) / 2;
             const centerY = (this.maxHeight - window.innerHeight) / 2;
             window.scroll(centerX, centerY);
+        },
+        handleMenuClick(item){
+            this.selectedInstrument = item;
         },
         handleMouseDown(event){
             if(this.resetFocus != null){
@@ -99,6 +119,16 @@ export default {
                 width: this.maxWidth + "px",
                 height: this.maxHeight + "px"
             }
+        },
+        dragabletextOn(){
+            return {
+                background: this.selectedInstrument == Instruments.DragableText ? "#aaa" : "#fff"
+            }
+        },
+        drawingOn(){
+            return {
+                background: this.selectedInstrument == Instruments.Drawing ? "#aaa" : "#fff"
+            }
         }
     }
 };
@@ -112,5 +142,21 @@ export default {
     font-size: 18px
     font-family: "Roboto", sans-serif
 
+#menu
+    position: fixed
+    left: 0
+    top: 30%
+    z-index: 1000
+
+#menu img
+    display: block
+    width: 32px
+    height: 32px
+    margin: 5px
+    padding: 3px
+    border: 1px solid black;
+
+#menu img:hover
+    background: #aaa
 
 </style>
