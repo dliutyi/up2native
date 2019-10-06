@@ -39,10 +39,12 @@ export default {
             objs: [],
             resetFocus: null,
             dragging: null,
-            selectedInstrument: Instruments.DragableText
+            selectedInstrument: Instruments.DragableText,
+            maxWidth: 3000,
+            maxHeight: 3000
         }
     },
-    created(){
+    mounted(){
         this.handleResize();
     },
     components: {
@@ -51,8 +53,9 @@ export default {
     },
     methods: {
         handleResize(){
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
+            const centerX = (this.maxWidth - window.innerWidth) / 2;
+            const centerY = (this.maxHeight - window.innerHeight) / 2;
+            window.scroll(centerX, centerY);
         },
         handleMouseDown(event){
             if(this.resetFocus != null){
@@ -91,8 +94,8 @@ export default {
     computed: {
         appStyle(){
             return{
-                width: this.width + "px",
-                height: this.height + "px"
+                width: this.maxWidth + "px",
+                height: this.maxHeight + "px"
             }
         }
     }
