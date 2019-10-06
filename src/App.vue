@@ -13,6 +13,8 @@
             v-bind:id="obj.id"
             v-bind:top="obj.y" 
             v-bind:left="obj.x"
+            v-bind:maxWidth="obj.maxWidth"
+            v-bind:maxHeight="obj.maxHeight"
             v-on:handleObjClick="handleObjClick"
             v-on:handleObjDrag="handleObjDrag"
             >
@@ -39,7 +41,7 @@ export default {
             objs: [],
             resetFocus: null,
             dragging: null,
-            selectedInstrument: Instruments.DragableText,
+            selectedInstrument: Instruments.Drawing,
             maxWidth: 3000,
             maxHeight: 3000
         }
@@ -67,7 +69,7 @@ export default {
             this.els = this.els + 1;
             const uid = "el" + this.els;
 
-            this.objs.push({ type: this.selectedInstrument, x: event.pageX, y: event.pageY, id: uid });
+            this.objs.push({ type: this.selectedInstrument, x: event.pageX, y: event.pageY, id: uid, maxWidth: this.maxWidth, maxHeight: this.maxHeight });
         },
         handleMouseMove(event){
             if(this.dragging != null){

@@ -35,8 +35,8 @@ export default {
     },
     created() {
         console.log("drawing instrument");
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
+        this.width = this.maxWidth;
+        this.height = this.maxHeight;
         this.dots.push({ x: this.left, y: this.top });
 
         this.redrawDrawings = debounce(this.handleDeboubcing, 10);
@@ -162,7 +162,7 @@ export default {
             }	
         }
     },
-    props: ["top", "left", "id"]
+    props: ["top", "left", "id", "maxWidth", "maxHeight"]
 };
 
 </script>
