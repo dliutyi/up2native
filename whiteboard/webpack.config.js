@@ -48,6 +48,14 @@ module.exports = {
         }, {
             test : /\.css$/, 
             use: ["vue-style-loader", "css-loader"]
+        },{
+            test: /\.(jpe?g|png|gif|svg|ico)$/i,
+            use: [{
+                loader: 'file-loader',
+                options: {
+                    outputPath: 'images'
+                }
+            }]
         }]
     },
     devServer: {

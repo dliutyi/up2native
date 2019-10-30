@@ -1,119 +1,157 @@
 <template>
-    <div id="app" :style="appStyle">
-        <canvas 
-            v-on:mousedown="handleClick" 
-            v-on:mousemove="handleHover"
-            v-bind:width="width" 
-            v-bind:height="height" 
-            v-bind:style="canvasStyle" id="whiteboard"></canvas>
+    <div 
+        id="app" 
+        v-on:mousedown="handleMouseDown" 
+        v-on:mouseup="handleMouseUp"
+        v-on:mousemove="handleMouseMove"
+        v-bind:style="appStyle"
+        >
+        <canvas id="background" v-bind:width="maxWidth" v-bind:height="maxHeight"></canvas>
+        <div id="menu">
+            <img 
+                v-bind:src="require('./images/text.svg')" 
+                v-bind:style="dragabletextOn"
+                v-on:mousedown.stop="" 
+                v-on:mouseup.stop="" 
+                v-on:mousemove.stop="" 
+                v-on:click.stop="handleMenuClick('DragableText')" 
+                />
+            <img 
+                v-bind:src="require('./images/draw.svg')" 
+                v-bind:style="drawingOn"
+                v-on:mousedown.stop="" 
+                v-on:mouseup.stop="" 
+                v-on:mousemove.stop="" 
+                v-on:click.stop="handleMenuClick('Drawing')" />
+        </div>
+        <component 
+            v-for="(obj, index) in objs" 
+            v-bind:key="index" 
+            v-bind:is="obj.type" 
+            v-bind:id="obj.id"
+            v-bind:top="obj.y" 
+            v-bind:left="obj.x"
+            v-bind:maxWidth="obj.maxWidth"
+            v-bind:maxHeight="obj.maxHeight"
+            v-on:handleObjClick="handleObjClick"
+            v-on:handleObjDrag="handleObjDrag"
+            >
+        </component>
     </div>
 </template>
 
 <script>
 
-import Text from "./objects/text.js"
+import DragableText from "./components/DragableText.vue"
+import Drawing from "./components/Drawing.vue"
+
+class Instruments{
+    static DragableText = "DragableText";
+    static Drawing = "Drawing";
+}
 
 export default {
     data() {
         return {
+            els: 0,
             width: 0,
             height: 0,
-            context: CanvasRenderingContext2D,
-            objs: []
-        };
-    },
-    created() {
-        window.addEventListener("resize", this.handleResize);
-        this.handleResize();
+            objs: [],
+            resetFocus: null,
+            dragging: null,
+            selectedInstrument: Instruments.DragableText,
+            maxWidth: 3000,
+            maxHeight: 3000
+        }
     },
     mounted(){
-        this.finalizeCanvas();
+        this.handleResize();
+        this.handleBackground();
     },
-    destroyed() {
-        width.removeEventListener("resize", this.handleResize);
+    components: {
+        DragableText,
+        Drawing
+    },
+    methods: {
+        handleResize(){
+            const centerX = (this.maxWidth - window.innerWidth) / 2;
+            const centerY = (this.maxHeight - window.innerHeight) / 2;
+            window.scroll(centerX, centerY);
+        },
+        handleBackground(){
+            let canvas = document.getElementById("background");
+            let context = canvas.getContext('2d');
+            context.clearRect(0, 0, this.maxWidth, this.maxHeight);
+            context.fillStyle = "white";
+            context.fillRect(0, 0, this.maxWidth, this.maxHeight);
+            context.strokeStyle = "#efefef";
+            let step = 20;
+            for(let i = step; i < this.maxWidth; i += step){
+                context.beginPath();
+                context.moveTo(i, 0);
+                context.lineTo(i, this.maxHeight);
+                context.stroke();
+            }
+            for(let i = step; i < this.maxHeight; i += step){
+                context.beginPath();
+                context.moveTo(0, i);
+                context.lineTo(this.maxWidth, i);
+                context.stroke();
+            }
+        },
+        handleMenuClick(item){
+            this.selectedInstrument = item;
+        },
+        handleMouseDown(event){
+            if(this.resetFocus != null){
+                this.resetFocus();
+                this.resetFocus = null;
+                return;
+            }
+
+            this.els = this.els + 1;
+            const uid = "el" + this.els;
+
+            this.objs.push({ type: this.selectedInstrument, x: event.pageX, y: event.pageY, id: uid, maxWidth: this.maxWidth, maxHeight: this.maxHeight });
+        },
+        handleMouseMove(event){
+            if(this.dragging != null){
+                this.dragging.move(event);
+            }
+        },
+        handleMouseUp(event){
+            if(this.dragging != null){
+                this.dragging.up(event);
+            }
+        },
+        handleObjClick(value){
+            if(this.resetFocus != null){
+                this.resetFocus();
+            }
+
+            value.focus();
+            this.resetFocus = value.unfocus;
+        },
+        handleObjDrag(value){
+            this.dragging = value;
+        }
     },
     computed: {
         appStyle(){
             return{
-                width: this.width + "px",
-                height: this.height + "px",
-                transformOrigin: "0px 0px",
-                transform: "scale(1, 1)"
+                width: this.maxWidth + "px",
+                height: this.maxHeight + "px"
             }
         },
-        canvasStyle(){
-            return{
-                position: "absolute",
-                width: this.width + "px",
-                height: this.height + "px",
-                transformOrigin: "0px 0px",
-                transform: "scale(1, 1)"
-            }
-        }
-    },
-    methods: {
-        handleResize() {
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
-        },
-        handleClick: function(event){
-            let shouldBeAdded = true;
-            for(let obj of this.objs){
-                let isBB = this.isBoundingBox(obj, event);
-                if(isBB && obj.isActive){
-                    shouldBeAdded = false;
-                }
-                if(isBB && shouldBeAdded == true){
-                    obj.isActive = true;
-                    shouldBeAdded = false;
-                }
-                else{
-                    if(obj.isActive){
-                        shouldBeAdded = false;
-                    }
-                    obj.isActive = false;
-                }
-            }
-            
-            if(shouldBeAdded){
-                let textObj = new Text(this.context);
-                textObj.move(event.pageX, event.pageY);
-                this.objs.push(textObj);
-            
-                this.updateCanvas(textObj);
-            }
-            else{
-                this.drawCanvas();
+        dragabletextOn(){
+            return {
+                background: this.selectedInstrument == Instruments.DragableText ? "#aaa" : "#fff"
             }
         },
-        handleHover: function(event){
-            for(let obj of this.objs){
-                let bb = obj.boundingBox;
-                obj.isHovered = this.isBoundingBox(obj, event);
+        drawingOn(){
+            return {
+                background: this.selectedInstrument == Instruments.Drawing ? "#aaa" : "#fff"
             }
-
-            this.drawCanvas();
-        },
-        isBoundingBox: function(obj, event){
-            let bb = obj.boundingBox;
-            return event.pageX > bb.Left && event.pageY > bb.Top && event.pageX < bb.Right && event.pageY < bb.Bottom;
-        },
-        updateCanvas: function(obj){
-            this.context.save();
-            obj.draw();
-            this.context.restore();
-        },
-        drawCanvas: function(){
-            this.context.clearRect(0, 0, this.width, this.height);
-            for(let obj of this.objs){
-                obj.draw();
-            }
-        },
-        finalizeCanvas: function(){
-            let canvas = document.getElementById("whiteboard");
-
-            this.context = canvas.getContext('2d');
-            this.context.clearRect(0, 0, this.width, this.height);
         }
     }
 };
@@ -122,12 +160,29 @@ export default {
 
 <style lang="sass">
 
-canvas
-    background: #FAFAFA
-
 #app 
+    background: #FAFAFA
     font-size: 18px
     font-family: "Roboto", sans-serif
 
+#app canvas
+    position: absolute
+
+#menu
+    position: fixed
+    left: 0
+    top: 30%
+    z-index: 1000
+
+#menu img
+    display: block
+    width: 32px
+    height: 32px
+    margin: 5px
+    padding: 3px
+    border: 1px solid black;
+
+#menu img:hover
+    background: #aaa
 
 </style>
