@@ -13,6 +13,7 @@ Vue.use(VueRouter)
 const routes = [
     { path: "/", component: Launch },
     { path: "/:id", component: Sheet }
+    //{ path: "/", component: Sheet }
 ]
 
 const router = new VueRouter({
