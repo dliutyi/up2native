@@ -42,6 +42,8 @@
 
 <script>
 
+import io from "socket.io-client";
+
 import DragableText from "./DragableText.vue"
 import Drawing from "./Drawing.vue"
 
@@ -61,8 +63,20 @@ export default {
             dragging: null,
             selectedInstrument: Instruments.DragableText,
             maxWidth: 3000,
-            maxHeight: 3000
+            maxHeight: 3000,
+            socket: io()
         }
+    },
+    created() {
+        this.socket.on("heartbeat", (data) => {
+            console.log("heartbeat " + data);
+        });
+
+        const socketIO = this.socket;
+
+        setInterval(function(){
+            socketIO.emit("heartbeat", "from client");
+        }, 1000);
     },
     mounted(){
         this.handleResize();
