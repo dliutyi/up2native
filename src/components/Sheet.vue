@@ -73,9 +73,11 @@ export default {
         });
 
         const socketIO = this.socket;
+        const params = this.$route.params;
+        const is_created = this.is_created;
 
         setInterval(function(){
-            socketIO.emit("heartbeat", "from client");
+            socketIO.emit("heartbeat", "from board " + params.id + " to create " + is_created);
         }, 1000);
     },
     mounted(){
@@ -85,6 +87,12 @@ export default {
     components: {
         DragableText,
         Drawing
+    },
+    props: {
+        is_created:{
+            type: Boolean,
+            default: false
+        }
     },
     methods: {
         handleResize(){
