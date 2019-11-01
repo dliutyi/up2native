@@ -12,8 +12,8 @@ Vue.use(VueRouter)
 
 const routes = [
     { path: "/", component: Launch },
-    { path: "/:id", component: Sheet }
-    //{ path: "/", component: Sheet }
+    { path: "/:id", component: Sheet },
+    { path: "/create/:id", component: Sheet, props: (route) => ({ is_created: true }) } 
 ]
 
 const router = new VueRouter({
