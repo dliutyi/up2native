@@ -1,36 +1,41 @@
+const path = require('path');
+
+const http = require("http");
 const express = require("express");
-
 const app = express();
-
-const http = require("http").Server(app);
-
-//const router = express.Router();
 
 const webpack = require("webpack");
 const webpackDevMiddleware = require("webpack-dev-middleware");
+const webpackHotMiddleware = require("webpack-hot-middleware");
 
 const config = require('./webpack.config.js');
 const compiler = webpack(config);
 
+var server = http.createServer(app);
+var io = require("socket.io").listen(server);
+
 app.use(webpackDevMiddleware(compiler, {
+    noInfo: true,
     publicPath: config.output.publicPath
 }));
 
-app.get("/#/", function(req, res, next) {
-    console.log("default path");
-    res.send("default path");
-});
+app.use(webpackHotMiddleware(compiler));
 
-app.get("/#/:id", function(req, res, next){
-    console.log("path with id");
-    res.send("path with id");
-});
+// app.get(/#/, function(req, res) {
+//     console.log("default path");
+//     res.send("initialization");
+//     //res.sendFile(path.join(__dirname, "index.html"));
+// });
 
-http.listen(3000, "0.0.0.0", function(){
+// app.get("/id", function(req, res){
+//     console.log("path with id");
+//     res.send("loading resources");
+//     //res.sendFile(path.join(__dirname, "index.html"));
+// });
+
+server.listen(3000, "0.0.0.0", function(){
     console.log("Example app listening on port 3000!\n");
 });
-
-const io = require("socket.io")(http);
 
 var msgCounter = 0;
 
