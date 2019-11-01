@@ -167,12 +167,12 @@ export default {
         },
         dragabletextOn(){
             return {
-                background: this.selectedInstrument == Instruments.DragableText ? "#aaa" : "#fff"
+                background: this.selectedInstrument == Instruments.DragableText ? "#ccc" : "#fff"
             }
         },
         drawingOn(){
             return {
-                background: this.selectedInstrument == Instruments.Drawing ? "#aaa" : "#fff"
+                background: this.selectedInstrument == Instruments.Drawing ? "#ccc" : "#fff"
             }
         }
     }
@@ -193,18 +193,28 @@ export default {
 #menu
     position: fixed
     left: 0
-    top: 30%
+    top: 10%
+    margin: 5px
     z-index: 1000
 
-#menu img
-    display: block
-    width: 32px
-    height: 32px
-    margin: 5px
-    padding: 3px
-    border: 1px solid black;
+    border-width: 1px
+    border-style: solid
+    border-color: #333333
+    border-radius: 5px
 
-#menu img:hover
-    background: #aaa
+    background: #FFFFFF
+
+    img
+        display: block
+        width: 32px
+        height: 32px
+        margin: 5px
+        padding: 10px
+        border: none
+        border-radius: 5px
+        background: #fff
+
+    img:hover
+        background: #ccc
 
 </style>
