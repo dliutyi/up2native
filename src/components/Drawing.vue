@@ -57,7 +57,7 @@ export default {
     methods: {
         handleHover(isHover){
             if(!this.isActive){
-                this.color = isHover ? "#AAAAFF" : "transparent";
+                this.color = isHover ? "#BBBBBB" : "transparent";
             }
         },
         handleDeboubcing(event){
@@ -121,7 +121,7 @@ export default {
         },
         callbackFocus(text){
             this.isActive = true;
-            this.color = "#0000FF";
+            this.color = "#777777";
         },
         callbackUnfocus(text){
             this.isActive = false;
@@ -158,7 +158,8 @@ export default {
                 height: this.height + "px",
                 top: this.y + "px",
                 left: this.x + "px",	
-                border: "1px outset " + this.color	
+                border: "1px solid " + this.color,
+                borderRadius: "5px"
             }	
         }
     },

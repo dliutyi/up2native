@@ -39,7 +39,7 @@ export default {
     methods: {
         handleHover(isHover){
             if(!this.isActive){
-                this.color = isHover ? "#AAAAFF" : "transparent";
+                this.color = isHover ? "#BBBBBB" : "transparent";
             }
         },
         handleMouseDown(event){
@@ -73,7 +73,7 @@ export default {
         },
         callbackFocus(text){
             this.isActive = true;
-            this.color = "#0000FF";
+            this.color = "#777777";
         },
         callbackUnfocus(text){
             this.isActive = false;
@@ -113,7 +113,7 @@ export default {
             return {
                 top: this.y + "px",
                 left: this.x + "px",
-                border: "1px outset " + this.color
+                border: "1px solid " + this.color
             }
         }
     },
@@ -130,6 +130,7 @@ export default {
     font: 27pt serif
     box-sizing: border-box
     cursor: default
+    border-radius: 5px
 
     -webkit-user-select: none
     -khtml-user-select: none
