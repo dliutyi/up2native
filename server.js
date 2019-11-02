@@ -1,5 +1,3 @@
-const path = require('path');
-
 const http = require("http");
 const express = require("express");
 const app = express();
@@ -11,6 +9,8 @@ const webpackHotMiddleware = require("webpack-hot-middleware");
 const config = require('./webpack.config.js');
 const compiler = webpack(config);
 
+const mongo = require("mongodb").MongoClient;
+
 var server = http.createServer(app);
 var io = require("socket.io").listen(server);
 
@@ -21,20 +21,15 @@ app.use(webpackDevMiddleware(compiler, {
 
 app.use(webpackHotMiddleware(compiler));
 
-// app.get(/#/, function(req, res) {
-//     console.log("default path");
-//     res.send("initialization");
-//     //res.sendFile(path.join(__dirname, "index.html"));
-// });
-
-// app.get("/id", function(req, res){
-//     console.log("path with id");
-//     res.send("loading resources");
-//     //res.sendFile(path.join(__dirname, "index.html"));
-// });
-
 server.listen(3000, "0.0.0.0", function(){
     console.log("Example app listening on port 3000!\n");
+});
+
+const url = "mongodb://127.0.0.1:27017";
+const params = { useUnifiedTopology: true, useNewUrlParser: true };
+mongo.connect(url, params, function(err, db){
+    console.log("connected");
+    db.close();
 });
 
 var msgCounter = 0;
