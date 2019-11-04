@@ -25,22 +25,30 @@ server.listen(3000, "0.0.0.0", function(){
     console.log("Example app listening on port 3000!\n");
 });
 
-const url = "mongodb://127.0.0.1:27017";
+const url = "mongodb://127.0.0.1:27017/up2nativedb";
 const params = { useUnifiedTopology: true, useNewUrlParser: true };
-mongo.connect(url, params, function(err, db){
+mongo.connect(url, params, function(err, client){
     console.log("connected");
-    db.close();
+    var db = client.db("up2nativedb");
+    var sheets = db.collection("sheets").find();
+    sheets.each(function(err, docs){
+        console.log(docs);
+    });
+    client.close();
 });
-
-var msgCounter = 0;
 
 io.on("connection", function(socket){
     console.log("user connected");
-    socket.on("heartbeat", function(msg){
-        msgCounter = msgCounter + 1;
-        io.emit("heartbeat", "" + msgCounter);
-        console.log("message: " + msg);
+
+    socket.on("create", function(settings){
+        console.log("created sheet " + settings.id);
     });
+
+    socket.on("update", function(delta){
+        console.log("update " + delta);
+        io.emit("update", delta);
+    });
+
     socket.on("disconnect", function(){
         console.log("user disconnected");
     });

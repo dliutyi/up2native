@@ -73,6 +73,8 @@ export default {
                 this.context.lineTo(dot.x - this.x, dot.y - this.y);
             }
             this.context.stroke();
+
+            this.$emit("handleUpdate", { xy: { x: this.x, y: this.y }, dots: this.dots });
         },
         handleMouseDown(event){
             this.moving.isFocus = true;
@@ -114,6 +116,8 @@ export default {
             if(this.moving.isFocus){
                 this.y = event.pageY - this.moving.y;
                 this.x = event.pageX - this.moving.x;
+
+                this.$emit("handleUpdate", { xy: { x: this.x, y: this.y } });
             }
         },
         handleDblClick(event){

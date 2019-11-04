@@ -35,6 +35,7 @@
             v-bind:maxHeight="obj.maxHeight"
             v-on:handleObjClick="handleObjClick"
             v-on:handleObjDrag="handleObjDrag"
+            v-on:handleUpdate="handleUpdate"
             >
         </component>
     </div>
@@ -68,17 +69,13 @@ export default {
         }
     },
     created() {
-        this.socket.on("heartbeat", (data) => {
-            console.log("heartbeat " + data);
-        });
-
-        const socketIO = this.socket;
         const params = this.$route.params;
         const is_created = this.is_created;
 
-        setInterval(function(){
-            socketIO.emit("heartbeat", "from board " + params.id + " to create " + is_created);
-        }, 1000);
+        if(is_created){
+            this.socket.emit("create", { id: params.id });
+        }
+        this.socket.on("update", this.handleBroadcastUpdate);
     },
     mounted(){
         this.handleResize();
@@ -95,6 +92,12 @@ export default {
         }
     },
     methods: {
+        handleBroadcastUpdate(delta){
+            console.log("updates received " + delta);
+        },
+        handleUpdate(delta){
+            this.socket.emit("update", delta);
+        },
         handleResize(){
             const centerX = (this.maxWidth - window.innerWidth) / 2;
             const centerY = (this.maxHeight - window.innerHeight) / 2;

@@ -57,6 +57,8 @@ export default {
             if(this.moving.isActive){
                 this.y = event.pageY - this.moving.y;
                 this.x = event.pageX - this.moving.x;
+
+                this.$emit("handleUpdate", { xy: { x: this.x, y: this.y } });
             }
         },
         handleDblClick(event){
@@ -80,6 +82,8 @@ export default {
             this.color = "transparent";
             this.editable = false;
             this.defaultText = this.defaultText.trim();
+
+            this.$emit("handleUpdate", { text: this.defaultText });
         },
         adjustTextarea(){
             if(!this.editable){
