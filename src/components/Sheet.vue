@@ -25,6 +25,7 @@
                 v-on:click.stop="handleMenuClick('Drawing')" />
         </div>
         <component 
+            ref="objs"
             v-for="(obj, index) in objs" 
             v-bind:key="index" 
             v-bind:is="obj.type" 
@@ -45,13 +46,10 @@
 
 import io from "socket.io-client";
 
+import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
+
 import DragableText from "./DragableText.vue"
 import Drawing from "./Drawing.vue"
-
-class Instruments{
-    static DragableText = "DragableText";
-    static Drawing = "Drawing";
-}
 
 export default {
     data() {
@@ -62,7 +60,7 @@ export default {
             objs: [],
             resetFocus: null,
             dragging: null,
-            selectedInstrument: Instruments.DragableText,
+            selectedInstrument: InstrumentType.DragableText,
             maxWidth: 3000,
             maxHeight: 3000,
             socket: io()
@@ -92,11 +90,25 @@ export default {
         }
     },
     methods: {
-        handleBroadcastUpdate(delta){
-            console.log("updates received " + delta);
+        handleBroadcastUpdate(data){
+            let foundIndex = this.objs.findIndex((obj) => obj.id == data.id);
+            console.log("isAlreadyCreate = " + (foundIndex > -1));
+
+            if(foundIndex == -1){
+                this.objs.push({ 
+                    type: data.type, 
+                    x: data.deltas[0].xy.x, 
+                    y: data.deltas[0].xy.y, 
+                    id: data.id, 
+                    maxWidth: this.maxWidth, 
+                    maxHeight: this.maxHeight });
+            }
+            else{
+                this.$refs.objs[foundIndex].receiveUpdates(data);
+            }
         },
-        handleUpdate(delta){
-            this.socket.emit("update", delta);
+        handleUpdate(data){
+            this.socket.emit("update", data);
         },
         handleResize(){
             const centerX = (this.maxWidth - window.innerWidth) / 2;
@@ -137,7 +149,12 @@ export default {
             this.els = this.els + 1;
             const uid = "el" + this.els;
 
-            this.objs.push({ type: this.selectedInstrument, x: event.pageX, y: event.pageY, id: uid, maxWidth: this.maxWidth, maxHeight: this.maxHeight });
+            let instrument = new Instrument();
+            instrument.id = uid;
+            instrument.type = this.selectedInstrument;
+            instrument.deltas = [ { type: UpdateType.Position, xy: { x: event.pageX, y: event.pageY } } ];
+
+            this.handleUpdate(instrument);
         },
         handleMouseMove(event){
             if(this.dragging != null){
@@ -170,12 +187,12 @@ export default {
         },
         dragabletextOn(){
             return {
-                background: this.selectedInstrument == Instruments.DragableText ? "#ccc" : "#fff"
+                background: this.selectedInstrument == InstrumentType.DragableText ? "#ccc" : "#fff"
             }
         },
         drawingOn(){
             return {
-                background: this.selectedInstrument == Instruments.Drawing ? "#ccc" : "#fff"
+                background: this.selectedInstrument == InstrumentType.Drawing ? "#ccc" : "#fff"
             }
         }
     }

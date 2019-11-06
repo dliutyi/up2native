@@ -15,6 +15,8 @@
 
 <script>
 
+import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
+
 export default {
     name: "dragabletext",
     data() {
@@ -29,14 +31,36 @@ export default {
             textHeight: 0,
             offsetX: 5,
             offsetY: 5,
-            editable: false
+            editable: false,
+            instrument: new Instrument()
         }
     },
     created() {
+        this.instrument.id = this.id;
+        this.instrument.type = this.selectedInstrument;
+        this.instrument.deltas.push({ xy: { x: this.top, y: this.top} });
+
         this.y = this.top - this.offsetX;
         this.x = this.left - this.offsetY;
     },
     methods: {
+        receiveUpdates(data){
+            let delta = data.deltas[data.deltas.length - 1];
+            console.log("updates received in DragableText - " + delta.type);
+            switch(delta.type){
+                case UpdateType.Position:
+                    this.x = delta.xy.x;
+                    this.y = delta.xy.y;
+                    break;
+                case UpdateType.Text:
+                    this.defaultText = delta.text;
+                    break;
+            }
+        },
+        update(delta){
+                this.instrument.deltas.push(delta);
+                this.$emit("handleUpdate", this.instrument);
+        },
         handleHover(isHover){
             if(!this.isActive){
                 this.color = isHover ? "#BBBBBB" : "transparent";
@@ -51,14 +75,15 @@ export default {
             this.$emit("handleObjDrag", { move: this.handleMouseMove, up: this.handleMouseUp });
         },
         handleMouseUp(event){
-            this.moving.isActive = false;
+            if(this.moving.isActive){
+                this.update({ type: UpdateType.Position, xy: { x: this.x, y: this.y } }); 
+                this.moving.isActive = false;
+            }
         },
         handleMouseMove(event){
             if(this.moving.isActive){
                 this.y = event.pageY - this.moving.y;
                 this.x = event.pageX - this.moving.x;
-
-                this.$emit("handleUpdate", { xy: { x: this.x, y: this.y } });
             }
         },
         handleDblClick(event){
@@ -80,10 +105,11 @@ export default {
         callbackUnfocus(text){
             this.isActive = false;
             this.color = "transparent";
-            this.editable = false;
             this.defaultText = this.defaultText.trim();
-
-            this.$emit("handleUpdate", { text: this.defaultText });
+            if(this.editable){
+                this.update({ type: UpdateType.Text, text: this.defaultText });
+                this.editable = false;
+            }
         },
         adjustTextarea(){
             if(!this.editable){

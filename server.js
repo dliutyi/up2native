@@ -44,9 +44,9 @@ io.on("connection", function(socket){
         console.log("created sheet " + settings.id);
     });
 
-    socket.on("update", function(delta){
-        console.log("update " + delta);
-        io.emit("update", delta);
+    socket.on("update", function(data){
+        console.log("update " + data);
+        io.emit("update", data);
     });
 
     socket.on("disconnect", function(){
