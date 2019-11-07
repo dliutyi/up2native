@@ -26,7 +26,7 @@
         </div>
         <component 
             ref="objs"
-            v-for="(obj, index) in objs" 
+            v-for="(obj, index) in sheet.objs" 
             v-bind:key="index" 
             v-bind:is="obj.type" 
             v-bind:id="obj.id"
@@ -36,7 +36,7 @@
             v-bind:maxHeight="obj.maxHeight"
             v-on:handleObjClick="handleObjClick"
             v-on:handleObjDrag="handleObjDrag"
-            v-on:handleUpdateFromInstrument="handleUpdateFromInstrument"
+            v-on:handleUpdateFromClient="handleUpdateFromClient"
             >
         </component>
     </div>
@@ -57,7 +57,6 @@ export default {
             els: 0,
             width: 0,
             height: 0,
-            objs: [],
             resetFocus: null,
             dragging: null,
             selectedInstrument: InstrumentType.DragableText,
@@ -99,36 +98,28 @@ export default {
                 return;
             }
 
-            this.sheet.objs = sheet.objs;
-
-            let data = this.sheet.objs;
-            let foundIndex = this.objs.findIndex((obj) => obj.id == data.id);
+            let data = sheet.objs[0];
+            let foundIndex = this.sheet.objs.findIndex((obj) => obj.id == data.id);
             console.log("isAlreadyCreate = " + (foundIndex > -1));
 
-            if(foundIndex == -1){
-                this.objs.push({ 
-                    type: data.type, 
-                    x: data.deltas[0].xy.x, 
-                    y: data.deltas[0].xy.y, 
-                    id: data.id, 
-                    maxWidth: this.maxWidth, 
-                    maxHeight: this.maxHeight });
-            }
-            else{
+            if(foundIndex > -1){
                 this.$refs.objs[foundIndex].receiveUpdate(data);
+                return;
             }
+
+            this.sheet.objs.push({ 
+                type: data.type, 
+                x: data.deltas[0].xy.x, 
+                y: data.deltas[0].xy.y, 
+                id: data.id, 
+                maxWidth: this.maxWidth, 
+                maxHeight: this.maxHeight });
         },
-        handleUpdateFromInstrument(data){
-            let foundObj = this.sheet.objs.find((obj) => obj.id == data.id);
-            foundObj.deltas = data.deltas;
-            this.handleUpdateFromClient();
-        },
-        handleNewInstrument(data){
-            this.sheet.objs.push(data);
-            this.handleUpdateFromClient();
-        },
-        handleUpdateFromClient(){
-            this.socket.emit("update", this.sheet);
+        handleUpdateFromClient(data){
+            let updateSheet = new Document();
+            updateSheet.id = this.sheet.id;
+            updateSheet.objs = [ data ];
+            this.socket.emit("update", updateSheet);
         },
         handleResize(){
             const centerX = (this.maxWidth - window.innerWidth) / 2;
@@ -174,7 +165,7 @@ export default {
             instrument.type = this.selectedInstrument;
             instrument.deltas = [ { type: UpdateType.Position, xy: { x: event.pageX, y: event.pageY } } ];
 
-            this.handleNewInstrument(instrument);
+            this.handleUpdateFromClient(instrument);
         },
         handleMouseMove(event){
             if(this.dragging != null){

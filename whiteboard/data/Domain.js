@@ -21,6 +21,7 @@ class Instrument{
 class UpdateType{
     static Position = "Position";
     static Text = "Text";
+    static Dots = "Dots";
 }
 
 export { Document, InstrumentType, Instrument, UpdateType }

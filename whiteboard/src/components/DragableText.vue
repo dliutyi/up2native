@@ -38,14 +38,15 @@ export default {
     created() {
         this.instrument.id = this.id;
         this.instrument.type = this.selectedInstrument;
-        this.instrument.deltas.push({ xy: { x: this.top, y: this.top} });
+        this.instrument.deltas.push({ xy: { x: this.left, y: this.top} });
 
         this.y = this.top - this.offsetX;
         this.x = this.left - this.offsetY;
     },
     methods: {
         receiveUpdate(data){
-            let delta = data.deltas[data.deltas.length - 1];
+            let delta = data.deltas[0];
+            this.instrument.deltas.push(delta);
             console.log("updates received in DragableText - " + delta.type);
             switch(delta.type){
                 case UpdateType.Position:
@@ -58,8 +59,11 @@ export default {
             }
         },
         sendUpdate(delta){
-                this.instrument.deltas.push(delta);
-                this.$emit("handleUpdateFromInstrument", this.instrument);
+                let updateInstrument = new Instrument();
+                updateInstrument.id = this.instrument.id;
+                updateInstrument.type = this.instrument.type;
+                updateInstrument.deltas = [ delta ];
+                this.$emit("handleUpdateFromClient", updateInstrument);
         },
         handleHover(isHover){
             if(!this.isActive){
