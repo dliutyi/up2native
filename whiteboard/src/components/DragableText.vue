@@ -44,7 +44,7 @@ export default {
         this.x = this.left - this.offsetY;
     },
     methods: {
-        receiveUpdates(data){
+        receiveUpdate(data){
             let delta = data.deltas[data.deltas.length - 1];
             console.log("updates received in DragableText - " + delta.type);
             switch(delta.type){
@@ -57,9 +57,9 @@ export default {
                     break;
             }
         },
-        update(delta){
+        sendUpdate(delta){
                 this.instrument.deltas.push(delta);
-                this.$emit("handleUpdate", this.instrument);
+                this.$emit("handleUpdateFromInstrument", this.instrument);
         },
         handleHover(isHover){
             if(!this.isActive){
@@ -76,7 +76,7 @@ export default {
         },
         handleMouseUp(event){
             if(this.moving.isActive){
-                this.update({ type: UpdateType.Position, xy: { x: this.x, y: this.y } }); 
+                this.sendUpdate({ type: UpdateType.Position, xy: { x: this.x, y: this.y } }); 
                 this.moving.isActive = false;
             }
         },
@@ -107,7 +107,7 @@ export default {
             this.color = "transparent";
             this.defaultText = this.defaultText.trim();
             if(this.editable){
-                this.update({ type: UpdateType.Text, text: this.defaultText });
+                this.sendUpdate({ type: UpdateType.Text, text: this.defaultText });
                 this.editable = false;
             }
         },

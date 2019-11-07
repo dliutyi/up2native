@@ -74,7 +74,7 @@ export default {
             }
             this.context.stroke();
 
-            this.$emit("handleUpdate", { xy: { x: this.x, y: this.y }, dots: this.dots });
+            this.$emit("handleUpdateFromInstrument", { xy: { x: this.x, y: this.y }, dots: this.dots });
         },
         handleMouseDown(event){
             this.moving.isFocus = true;
@@ -117,7 +117,7 @@ export default {
                 this.y = event.pageY - this.moving.y;
                 this.x = event.pageX - this.moving.x;
 
-                this.$emit("handleUpdate", { xy: { x: this.x, y: this.y } });
+                this.$emit("handleUpdateFromInstrument", { xy: { x: this.x, y: this.y } });
             }
         },
         handleDblClick(event){

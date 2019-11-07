@@ -36,7 +36,7 @@
             v-bind:maxHeight="obj.maxHeight"
             v-on:handleObjClick="handleObjClick"
             v-on:handleObjDrag="handleObjDrag"
-            v-on:handleUpdate="handleUpdate"
+            v-on:handleUpdateFromInstrument="handleUpdateFromInstrument"
             >
         </component>
     </div>
@@ -46,7 +46,7 @@
 
 import io from "socket.io-client";
 
-import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
+import { Document, InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 
 import DragableText from "./DragableText.vue"
 import Drawing from "./Drawing.vue"
@@ -63,6 +63,7 @@ export default {
             selectedInstrument: InstrumentType.DragableText,
             maxWidth: 3000,
             maxHeight: 3000,
+            sheet: new Document(),
             socket: io()
         }
     },
@@ -70,9 +71,12 @@ export default {
         const params = this.$route.params;
         const is_created = this.is_created;
 
-        if(is_created){
-            this.socket.emit("create", { id: params.id });
-        }
+        // if(is_created){
+        //     this.socket.emit("create", { id: params.id });
+        // }
+
+        this.sheet.id = params.id;
+
         this.socket.on("update", this.handleBroadcastUpdate);
     },
     mounted(){
@@ -90,7 +94,14 @@ export default {
         }
     },
     methods: {
-        handleBroadcastUpdate(data){
+        handleBroadcastUpdate(sheet){
+            if(this.sheet.id != sheet.id){
+                return;
+            }
+
+            this.sheet.objs = sheet.objs;
+
+            let data = this.sheet.objs;
             let foundIndex = this.objs.findIndex((obj) => obj.id == data.id);
             console.log("isAlreadyCreate = " + (foundIndex > -1));
 
@@ -104,11 +115,20 @@ export default {
                     maxHeight: this.maxHeight });
             }
             else{
-                this.$refs.objs[foundIndex].receiveUpdates(data);
+                this.$refs.objs[foundIndex].receiveUpdate(data);
             }
         },
-        handleUpdate(data){
-            this.socket.emit("update", data);
+        handleUpdateFromInstrument(data){
+            let foundObj = this.sheet.objs.find((obj) => obj.id == data.id);
+            foundObj.deltas = data.deltas;
+            this.handleUpdateFromClient();
+        },
+        handleNewInstrument(data){
+            this.sheet.objs.push(data);
+            this.handleUpdateFromClient();
+        },
+        handleUpdateFromClient(){
+            this.socket.emit("update", this.sheet);
         },
         handleResize(){
             const centerX = (this.maxWidth - window.innerWidth) / 2;
@@ -154,7 +174,7 @@ export default {
             instrument.type = this.selectedInstrument;
             instrument.deltas = [ { type: UpdateType.Position, xy: { x: event.pageX, y: event.pageY } } ];
 
-            this.handleUpdate(instrument);
+            this.handleNewInstrument(instrument);
         },
         handleMouseMove(event){
             if(this.dragging != null){

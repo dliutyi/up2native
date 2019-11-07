@@ -34,22 +34,18 @@ mongo.connect(url, params, function(err, client){
     sheets.each(function(err, docs){
         console.log(docs);
     });
-    client.close();
-});
 
-io.on("connection", function(socket){
-    console.log("user connected");
-
-    socket.on("create", function(settings){
-        console.log("created sheet " + settings.id);
-    });
-
-    socket.on("update", function(data){
-        console.log("update " + data);
-        io.emit("update", data);
-    });
-
-    socket.on("disconnect", function(){
-        console.log("user disconnected");
+    io.on("connection", function(socket){
+        console.log("user connected");
+    
+        socket.on("update", function(sheet){
+            console.log("update " + sheet.id);
+            io.emit("update", sheet);
+        });
+    
+        socket.on("disconnect", function(){
+            console.log("user disconnected");
+        });
     });
 });
+
