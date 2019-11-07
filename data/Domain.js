@@ -1,3 +1,10 @@
+class Document{
+    constructor(){
+        this.id = 0;
+        this.objs = [];
+    }
+}
+
 class InstrumentType{
     static DragableText = "DragableText";
     static Drawing = "Drawing";
@@ -16,4 +23,4 @@ class UpdateType{
     static Text = "Text";
 }
 
-export { InstrumentType, Instrument, UpdateType }
+export { Document, InstrumentType, Instrument, UpdateType }
