@@ -9,6 +9,13 @@
         <canvas id="background" v-bind:width="maxWidth" v-bind:height="maxHeight"></canvas>
         <div id="menu">
             <img 
+                v-bind:src="require('./../images/arrow.svg')" 
+                v-bind:style="movingOn"
+                v-on:mousedown.stop="" 
+                v-on:mouseup.stop="" 
+                v-on:mousemove.stop="" 
+                v-on:click.stop="handleMenuClick('Moving')" />
+            <img 
                 v-bind:src="require('./../images/text.svg')" 
                 v-bind:style="dragabletextOn"
                 v-on:mousedown.stop="" 
@@ -50,6 +57,7 @@ import { Document, InstrumentType, Instrument, UpdateType } from "../../data/Dom
 
 import DragableText from "./DragableText.vue"
 import Drawing from "./Drawing.vue"
+import Moving from "./Moving.vue"
 
 export default {
     data() {
@@ -59,7 +67,7 @@ export default {
             height: 0,
             resetFocus: null,
             dragging: null,
-            selectedInstrument: InstrumentType.DragableText,
+            selectedInstrument: InstrumentType.Moving,
             maxWidth: 3000,
             maxHeight: 3000,
             sheet: new Document(),
@@ -69,13 +77,11 @@ export default {
     created() {
         const params = this.$route.params;
         const is_created = this.is_created;
-
         // if(is_created){
         //     this.socket.emit("create", { id: params.id });
         // }
 
         this.sheet.id = params.id;
-
         this.socket.on("update", this.handleBroadcastUpdate);
     },
     mounted(){
@@ -84,7 +90,8 @@ export default {
     },
     components: {
         DragableText,
-        Drawing
+        Drawing,
+        Moving
     },
     props: {
         is_created:{
@@ -107,6 +114,9 @@ export default {
                 return;
             }
 
+            this.addNewInsturment(data);
+        },
+        addNewInsturment(data){
             this.sheet.objs.push({ 
                 type: data.type, 
                 x: data.deltas[0].xy.x, 
@@ -127,23 +137,18 @@ export default {
             window.scroll(centerX, centerY);
         },
         handleBackground(){
-            let canvas = document.getElementById("background");
-            let context = canvas.getContext('2d');
-            context.clearRect(0, 0, this.maxWidth, this.maxHeight);
-            context.fillStyle = "white";
-            context.fillRect(0, 0, this.maxWidth, this.maxHeight);
+            let context = document.getElementById("background").getContext('2d');
+            context.fillStyle = "#ffffff";
             context.strokeStyle = "#efefef";
-            let step = 20;
-            for(let i = step; i < this.maxWidth; i += step){
+            context.fillRect(0, 0, this.maxWidth, this.maxHeight);
+            this.drawBackgroundLines(context, this.maxWidth, this.maxHeight, 20, 1, 0);
+            this.drawBackgroundLines(context, this.maxHeight, this.maxWidth, 20, 0, 1);
+        },
+        drawBackgroundLines(context, size, length, step, isVertical, isHorizontal){
+            for(let i = step; i < size; i += step){
                 context.beginPath();
-                context.moveTo(i, 0);
-                context.lineTo(i, this.maxHeight);
-                context.stroke();
-            }
-            for(let i = step; i < this.maxHeight; i += step){
-                context.beginPath();
-                context.moveTo(0, i);
-                context.lineTo(this.maxWidth, i);
+                context.moveTo(i * isVertical, i * isHorizontal);
+                context.lineTo(i * isVertical + length * isHorizontal, i * isHorizontal + length * isVertical);
                 context.stroke();
             }
         },
@@ -160,12 +165,13 @@ export default {
             this.els = this.els + 1;
             const uid = "el" + this.els;
 
-            let instrument = new Instrument();
-            instrument.id = uid;
-            instrument.type = this.selectedInstrument;
-            instrument.deltas = [ { type: UpdateType.Position, xy: { x: event.pageX, y: event.pageY } } ];
+            let newInstrument = new Instrument();
+            newInstrument.id = uid;
+            newInstrument.type = this.selectedInstrument;
+            newInstrument.deltas = [ { type: UpdateType.Position, xy: { x: event.pageX, y: event.pageY } } ];
 
-            this.handleUpdateFromClient(instrument);
+            this.addNewInsturment(newInstrument);
+            this.handleUpdateFromClient(newInstrument);
         },
         handleMouseMove(event){
             if(this.dragging != null){
@@ -204,6 +210,11 @@ export default {
         drawingOn(){
             return {
                 background: this.selectedInstrument == InstrumentType.Drawing ? "#ccc" : "#fff"
+            }
+        },
+        movingOn(){
+            return {
+                background: this.selectedInstrument == InstrumentType.Moving ? "#ccc" : "#fff"
             }
         }
     }

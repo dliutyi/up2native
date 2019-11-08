@@ -8,6 +8,7 @@ class Document{
 class InstrumentType{
     static DragableText = "DragableText";
     static Drawing = "Drawing";
+    static Moving = "Moving";
 }
 
 class Instrument{
