@@ -9,6 +9,7 @@ const WebPack = require("webpack")
 module.exports = {
     mode: "development",
     entry: [
+        "webpack-hot-middleware/client",
         "./src/app.js"
     ],
     output: {
@@ -58,14 +59,11 @@ module.exports = {
             }]
         }]
     },
-    devServer: {
-        contentBase: "./dist",
-        open: true,
-        hot: true,
-    },
     plugins: [
         new HtmlWebpackPlugin({
-            template: "./src/index.html"
+            template: "./src/index.html",
+            filename: "index.html",
+            inject: "body"
         }),
         new VueLoaderPlugin(),
         new CleanWebpackPlugin(),

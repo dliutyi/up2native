@@ -13,6 +13,7 @@
 
 <script>
 
+import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 import { debounce } from "./../objects/Helper.js";
 
 export default {
@@ -30,11 +31,16 @@ export default {
             canvas: null,
             context: null,
             dots: [],
+            instrument: new Instrument(),
             redrawDrawings: null
         }
     },
     created() {
         console.log("drawing instrument");
+        this.instrument.id = this.id;
+        this.instrument.type = this.selectedInstrument;
+        this.instrument.deltas.push({ xy: { x: this.left, y: this.top} });
+
         this.width = this.maxWidth;
         this.height = this.maxHeight;
         this.dots.push({ x: this.left, y: this.top });
@@ -55,9 +61,32 @@ export default {
         this.$emit("handleObjDrag", { move: this.handleDrawingMove, up: this.handleDrawingEnd });
     },
     methods: {
+        receiveUpdate(data){
+            let delta = data.deltas[0];
+            this.instrument.deltas.push(delta);
+            console.log("updates received in Drawing - " + delta.type);
+            switch(delta.type){
+                case UpdateType.Position:
+                    this.x = delta.xy.x;
+                    this.y = delta.xy.y;
+                    break;
+                case UpdateType.Dots:
+                    this.dots = delta.dots;
+                    this.redrawDrawings();
+                    break;
+            }
+        },
+        sendUpdate(delta){
+                let updateInstrument = new Instrument();
+                updateInstrument.id = this.instrument.id;
+                updateInstrument.type = this.instrument.type;
+                updateInstrument.deltas = [ delta ];
+                this.$emit("handleUpdateFromClient", updateInstrument);
+        },
+
         handleHover(isHover){
             if(!this.isActive){
-                this.color = isHover ? "#AAAAFF" : "transparent";
+                this.color = isHover ? "#BBBBBB" : "transparent";
             }
         },
         handleDeboubcing(event){
@@ -83,7 +112,10 @@ export default {
             this.$emit("handleObjDrag", { move: this.handleMouseMove, up: this.handleMouseUp });
         },
         handleMouseUp(event){
-            this.moving.isFocus = false;
+            if(this.moving.isFocus){
+                this.moving.isFocus = false;
+                this.sendUpdate({ type: UpdateType.Position, xy: { x: this.x, y: this.y } });
+            }
         },
         handleDrawingEnd(event){
             if(this.moving.isActive){
@@ -100,6 +132,9 @@ export default {
                 this.height = aabb.RightDown.y - aabb.LeftUp.y;
 
                 this.redrawDrawings();
+
+                this.sendUpdate({ type: UpdateType.Position, xy: { x: this.x, y: this.y } });
+                this.sendUpdate({ type: UpdateType.Dots, dots: this.dots });
             }
         },
         handleDrawingMove(event){
@@ -121,7 +156,7 @@ export default {
         },
         callbackFocus(text){
             this.isActive = true;
-            this.color = "#0000FF";
+            this.color = "#777777";
         },
         callbackUnfocus(text){
             this.isActive = false;
@@ -158,7 +193,8 @@ export default {
                 height: this.height + "px",
                 top: this.y + "px",
                 left: this.x + "px",	
-                border: "1px outset " + this.color	
+                border: "1px solid " + this.color,
+                borderRadius: "5px"
             }	
         }
     },

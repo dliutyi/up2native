@@ -32,10 +32,14 @@
     "webpack": "^4.39.1",
     "webpack-cli": "^3.3.6",
     "webpack-dev-middleware": "^3.7.0",
-    "webpack-dev-server": "^3.7.2"
+    "webpack-dev-server": "^3.7.2",
+    "webpack-hot-middleware": "^2.25.0"
   },
   "dependencies": {
     "lodash": "^4.17.15",
+    "mongodb": "^3.3.3",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
     "vue": "^2.6.10",
     "vue-router": "^3.1.1"
   }

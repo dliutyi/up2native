@@ -15,6 +15,8 @@
 
 <script>
 
+import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
+
 export default {
     name: "dragabletext",
     data() {
@@ -29,17 +31,43 @@ export default {
             textHeight: 0,
             offsetX: 5,
             offsetY: 5,
-            editable: false
+            editable: false,
+            instrument: new Instrument()
         }
     },
     created() {
+        this.instrument.id = this.id;
+        this.instrument.type = this.selectedInstrument;
+        this.instrument.deltas.push({ xy: { x: this.left, y: this.top} });
+
         this.y = this.top - this.offsetX;
         this.x = this.left - this.offsetY;
     },
     methods: {
+        receiveUpdate(data){
+            let delta = data.deltas[0];
+            this.instrument.deltas.push(delta);
+            console.log("updates received in DragableText - " + delta.type);
+            switch(delta.type){
+                case UpdateType.Position:
+                    this.x = delta.xy.x;
+                    this.y = delta.xy.y;
+                    break;
+                case UpdateType.Text:
+                    this.defaultText = delta.text;
+                    break;
+            }
+        },
+        sendUpdate(delta){
+                let updateInstrument = new Instrument();
+                updateInstrument.id = this.instrument.id;
+                updateInstrument.type = this.instrument.type;
+                updateInstrument.deltas = [ delta ];
+                this.$emit("handleUpdateFromClient", updateInstrument);
+        },
         handleHover(isHover){
             if(!this.isActive){
-                this.color = isHover ? "#AAAAFF" : "transparent";
+                this.color = isHover ? "#BBBBBB" : "transparent";
             }
         },
         handleMouseDown(event){
@@ -51,7 +79,10 @@ export default {
             this.$emit("handleObjDrag", { move: this.handleMouseMove, up: this.handleMouseUp });
         },
         handleMouseUp(event){
-            this.moving.isActive = false;
+            if(this.moving.isActive){
+                this.sendUpdate({ type: UpdateType.Position, xy: { x: this.x, y: this.y } }); 
+                this.moving.isActive = false;
+            }
         },
         handleMouseMove(event){
             if(this.moving.isActive){
@@ -73,13 +104,16 @@ export default {
         },
         callbackFocus(text){
             this.isActive = true;
-            this.color = "#0000FF";
+            this.color = "#777777";
         },
         callbackUnfocus(text){
             this.isActive = false;
             this.color = "transparent";
-            this.editable = false;
             this.defaultText = this.defaultText.trim();
+            if(this.editable){
+                this.sendUpdate({ type: UpdateType.Text, text: this.defaultText });
+                this.editable = false;
+            }
         },
         adjustTextarea(){
             if(!this.editable){
@@ -113,7 +147,7 @@ export default {
             return {
                 top: this.y + "px",
                 left: this.x + "px",
-                border: "1px outset " + this.color
+                border: "1px solid " + this.color
             }
         }
     },
@@ -130,6 +164,7 @@ export default {
     font: 27pt serif
     box-sizing: border-box
     cursor: default
+    border-radius: 5px
 
     -webkit-user-select: none
     -khtml-user-select: none

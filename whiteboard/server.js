@@ -1,15 +1,51 @@
+const http = require("http");
 const express = require("express");
+const app = express();
+
 const webpack = require("webpack");
 const webpackDevMiddleware = require("webpack-dev-middleware");
+const webpackHotMiddleware = require("webpack-hot-middleware");
 
-const app = express();
 const config = require('./webpack.config.js');
 const compiler = webpack(config);
 
+const mongo = require("mongodb").MongoClient;
+
+var server = http.createServer(app);
+var io = require("socket.io").listen(server);
+
 app.use(webpackDevMiddleware(compiler, {
+    noInfo: true,
     publicPath: config.output.publicPath
 }));
 
-app.listen(3000, "0.0.0.0", function(){
+app.use(webpackHotMiddleware(compiler));
+
+server.listen(3000, "0.0.0.0", function(){
     console.log("Example app listening on port 3000!\n");
 });
+
+const url = "mongodb://127.0.0.1:27017/up2nativedb";
+const params = { useUnifiedTopology: true, useNewUrlParser: true };
+mongo.connect(url, params, function(err, client){
+    console.log("connected");
+    var db = client.db("up2nativedb");
+    var sheets = db.collection("sheets").find();
+    sheets.each(function(err, docs){
+        console.log(docs);
+    });
+
+    io.on("connection", function(socket){
+        console.log("user connected");
+    
+        socket.on("update", function(sheet){
+            console.log("update " + sheet.id);
+            io.emit("update", sheet);
+        });
+    
+        socket.on("disconnect", function(){
+            console.log("user disconnected");
+        });
+    });
+});
+
