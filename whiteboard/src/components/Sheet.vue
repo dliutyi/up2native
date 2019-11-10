@@ -110,7 +110,6 @@ export default {
                     });
 
                     let data = sheet.objs[item];
-
                     this.sheet.objs.push({ 
                         type: data.type, 
                         x: data.deltas[0].xy.x, 
@@ -121,17 +120,18 @@ export default {
                 }
             }
 
-            debounce(() => {
+            this.$nextTick().then(() => {
                 for(let item = 0, els = 0; item < sheet.objs.length; ++item){
                     if(sheet.objs[item].deltas != undefined){
+                        this.els = this.els + 1;
+
                         let data = sheet.objs[item];
                         for(let number = 1; number < data.deltas.length; ++number){
-                            this.$refs.objs[this.els].receiveUpdate({ deltas: [ data.deltas[number] ] });
+                            this.$refs.objs[this.els - 1].receiveUpdate({ deltas: [ data.deltas[number] ] });
                         }
-                        this.els = this.els + 1;
                     }
                 }
-            }, 10)();
+            });
 
         },
         handleBroadcastUpdate(sheet){
