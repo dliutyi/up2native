@@ -18,7 +18,7 @@
 import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 
 export default {
-    name: "dragabletext",
+    name: InstrumentType.DragableText,
     data() {
         return {
             defaultText: "default text",
@@ -44,6 +44,13 @@ export default {
         this.x = this.left - this.offsetY;
     },
     methods: {
+        staticCreate(uid, xy, updateCollectionCallback){
+            let newInstrument = new Instrument(uid, 
+                InstrumentType.DragableText, 
+                [ { type: UpdateType.Position, xy: xy } ]);
+            updateCollectionCallback(newInstrument);
+            return newInstrument;
+        },
         receiveUpdate(data){
             let delta = data.deltas[0];
             this.instrument.deltas.push(delta);

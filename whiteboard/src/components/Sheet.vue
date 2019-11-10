@@ -117,6 +117,7 @@ export default {
             this.addNewInsturment(data);
         },
         addNewInsturment(data){
+            this.els = this.els + 1;
             this.sheet.objs.push({ 
                 type: data.type, 
                 x: data.deltas[0].xy.x, 
@@ -162,16 +163,19 @@ export default {
                 return;
             }
 
-            this.els = this.els + 1;
+            let instruments = new Map ( [
+             [ InstrumentType.Moving, Moving.methods ],
+             [ InstrumentType.Drawing, Drawing.methods ],
+             [ InstrumentType.DragableText, DragableText.methods ]
+            ] );
+
             const uid = "el" + this.els;
+            const xy = { x: event.pageX, y: event.pageY }; 
+            let instrument = instruments.get(this.selectedInstrument).staticCreate(uid, xy, this.addNewInsturment);   
 
-            let newInstrument = new Instrument();
-            newInstrument.id = uid;
-            newInstrument.type = this.selectedInstrument;
-            newInstrument.deltas = [ { type: UpdateType.Position, xy: { x: event.pageX, y: event.pageY } } ];
-
-            this.addNewInsturment(newInstrument);
-            this.handleUpdateFromClient(newInstrument);
+            if(instrument != null){
+                this.handleUpdateFromClient(instrument);
+            }
         },
         handleMouseMove(event){
             if(this.dragging != null){

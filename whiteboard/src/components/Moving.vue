@@ -16,7 +16,7 @@
 import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 
 export default {
-    name: "moving",
+    name: InstrumentType.Moving,
     data() {
         return {
         }
@@ -24,6 +24,9 @@ export default {
     created() {
     },
     methods: {
+        staticCreate(uid, xy, updateCollectionCallback){
+            return null;
+        }
     },
     computed: {
     },

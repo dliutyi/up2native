@@ -12,10 +12,11 @@ class InstrumentType{
 }
 
 class Instrument{
-    constructor(){
-        this.id = 0;
-        this.type = 0;
-        this.deltas = [];
+    constructor(id = 0, type = 0, isSyncable = false, deltas = []){
+        this.id = id;
+        this.type = type;
+        this.isSyncable = isSyncable;
+        this.deltas = deltas;
     }
 }
 

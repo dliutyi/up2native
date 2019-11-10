@@ -17,7 +17,7 @@ import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 import { debounce } from "./../objects/Helper.js";
 
 export default {
-    name: "drawing",
+    name: InstrumentType.Drawing,
     data() {
         return {
             color: "transparent",
@@ -61,6 +61,13 @@ export default {
         this.$emit("handleObjDrag", { move: this.handleDrawingMove, up: this.handleDrawingEnd });
     },
     methods: {
+        staticCreate(uid, xy, updateCollectionCallback){
+            let newInstrument = new Instrument(uid, 
+                InstrumentType.Drawing, 
+                [ { type: UpdateType.Position, xy: xy } ]);
+            updateCollectionCallback(newInstrument);
+            return newInstrument;
+        },
         receiveUpdate(data){
             let delta = data.deltas[0];
             this.instrument.deltas.push(delta);
