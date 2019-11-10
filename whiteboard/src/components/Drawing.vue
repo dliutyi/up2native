@@ -77,11 +77,11 @@ export default {
             }
         },
         sendUpdate(delta){
-                let updateInstrument = new Instrument();
-                updateInstrument.id = this.instrument.id;
-                updateInstrument.type = this.instrument.type;
-                updateInstrument.deltas = [ delta ];
-                this.$emit("handleUpdateFromClient", updateInstrument);
+            let updateInstrument = new Instrument();
+            updateInstrument.id = this.instrument.id;
+            updateInstrument.type = this.instrument.type;
+            updateInstrument.deltas = [ delta ];
+            this.$emit("handleUpdateFromClient", updateInstrument);
         },
 
         handleHover(isHover){

@@ -30,17 +30,49 @@ const params = { useUnifiedTopology: true, useNewUrlParser: true };
 mongo.connect(url, params, function(err, client){
     console.log("connected");
     var db = client.db("up2nativedb");
-    var sheets = db.collection("sheets").find();
-    sheets.each(function(err, docs){
-        console.log(docs);
-    });
+    var sheets = db.collection("sheets");
 
     io.on("connection", function(socket){
         console.log("user connected");
     
         socket.on("update", function(sheet){
             console.log("update " + sheet.id);
+            sheets.updateOne(
+                {
+                    id: sheet.id
+                }, 
+                { 
+                    $addToSet: { 
+                        objs: { 
+                            id: sheet.objs[0].id, 
+                            type: sheet.objs[0].type
+                        } 
+                    } 
+                },  
+                { upsert: true }
+            ).then(() => {
+                sheets.updateOne(
+                {
+                    id: sheet.id, 
+                    objs: { $elemMatch: { id: sheet.objs[0].id } } 
+                }, 
+                { 
+                    $addToSet: { 
+                        "objs.$.deltas": sheet.objs[0].deltas[0] 
+                    } 
+                });
+            });
             io.emit("update", sheet);
+        });
+
+        socket.on("initialize", function(sheet){
+            console.log("initialize " + sheet.id);
+            sheets.findOne({ 
+                id: sheet.id
+            }).then((document) => {
+                io.emit("initialize", JSON.stringify(document));
+                console.log("state " + document);
+            });
         });
     
         socket.on("disconnect", function(){

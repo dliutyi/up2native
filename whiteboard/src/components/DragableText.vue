@@ -18,7 +18,7 @@
 import { InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 
 export default {
-    name: "dragabletext",
+    name: InstrumentType.DragableText,
     data() {
         return {
             defaultText: "default text",
@@ -37,7 +37,7 @@ export default {
     },
     created() {
         this.instrument.id = this.id;
-        this.instrument.type = this.selectedInstrument;
+        this.instrument.type = InstrumentType.DragableText;
         this.instrument.deltas.push({ xy: { x: this.left, y: this.top} });
 
         this.y = this.top - this.offsetX;
@@ -59,11 +59,11 @@ export default {
             }
         },
         sendUpdate(delta){
-                let updateInstrument = new Instrument();
-                updateInstrument.id = this.instrument.id;
-                updateInstrument.type = this.instrument.type;
-                updateInstrument.deltas = [ delta ];
-                this.$emit("handleUpdateFromClient", updateInstrument);
+            let updateInstrument = new Instrument();
+            updateInstrument.id = this.instrument.id;
+            updateInstrument.type = InstrumentType.DragableText;
+            updateInstrument.deltas = [ delta ];
+            this.$emit("handleUpdateFromClient", updateInstrument);
         },
         handleHover(isHover){
             if(!this.isActive){

@@ -47,6 +47,7 @@
 import io from "socket.io-client";
 
 import { Document, InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
+import { debounce } from "./../objects/Helper.js";
 
 import DragableText from "./DragableText.vue"
 import Drawing from "./Drawing.vue"
@@ -68,19 +69,18 @@ export default {
     },
     created() {
         const params = this.$route.params;
-        const is_created = this.is_created;
-
-        // if(is_created){
-        //     this.socket.emit("create", { id: params.id });
-        // }
-
         this.sheet.id = params.id;
 
         this.socket.on("update", this.handleBroadcastUpdate);
+        this.socket.on("initialize", this.initializeSheet);
     },
     mounted(){
         this.handleResize();
         this.handleBackground();
+
+        let initializeSheet = new Document();
+        initializeSheet.id = this.sheet.id;
+        this.socket.emit("initialize", initializeSheet);
     },
     components: {
         DragableText,
@@ -93,6 +93,47 @@ export default {
         }
     },
     methods: {
+        initializeSheet(sheet){
+            sheet = JSON.parse(sheet);
+            console.log("syncing " + this.sheet.id);
+
+            if(sheet == null || this.sheet.id !== sheet.id){
+                return;
+            }
+
+            console.log(sheet);
+
+            for(let item = 0, els = 0; item < sheet.objs.length; ++item){
+                if(sheet.objs[item].deltas != undefined){
+                    sheet.objs[item].deltas.sort(function(a, b){
+                        return a.datetime > b.datetime;
+                    });
+
+                    let data = sheet.objs[item];
+
+                    this.sheet.objs.push({ 
+                        type: data.type, 
+                        x: data.deltas[0].xy.x, 
+                        y: data.deltas[0].xy.y, 
+                        id: data.id, 
+                        maxWidth: this.maxWidth, 
+                        maxHeight: this.maxHeight });
+                }
+            }
+
+            debounce(() => {
+                for(let item = 0, els = 0; item < sheet.objs.length; ++item){
+                    if(sheet.objs[item].deltas != undefined){
+                        let data = sheet.objs[item];
+                        for(let number = 1; number < data.deltas.length; ++number){
+                            this.$refs.objs[this.els].receiveUpdate({ deltas: [ data.deltas[number] ] });
+                        }
+                        this.els = this.els + 1;
+                    }
+                }
+            }, 10)();
+
+        },
         handleBroadcastUpdate(sheet){
             if(this.sheet.id != sheet.id){
                 return;
@@ -116,6 +157,8 @@ export default {
                 maxHeight: this.maxHeight });
         },
         handleUpdateFromClient(data){
+            data.deltas[0].datetime = Date.now();
+
             let updateSheet = new Document();
             updateSheet.id = this.sheet.id;
             updateSheet.objs = [ data ];
@@ -127,23 +170,18 @@ export default {
             window.scroll(centerX, centerY);
         },
         handleBackground(){
-            let canvas = document.getElementById("background");
-            let context = canvas.getContext('2d');
-            context.clearRect(0, 0, this.maxWidth, this.maxHeight);
-            context.fillStyle = "white";
-            context.fillRect(0, 0, this.maxWidth, this.maxHeight);
+            let context = document.getElementById("background").getContext('2d');
+            context.fillStyle = "#ffffff";
             context.strokeStyle = "#efefef";
-            let step = 20;
-            for(let i = step; i < this.maxWidth; i += step){
+            context.fillRect(0, 0, this.maxWidth, this.maxHeight);
+            this.drawBackgroundLines(context, this.maxWidth, this.maxHeight, 20, 1, 0);
+            this.drawBackgroundLines(context, this.maxHeight, this.maxWidth, 20, 0, 1);
+        },
+        drawBackgroundLines(context, size, length, step, isVertical, isHorizontal){
+            for(let i = step; i < size; i += step){
                 context.beginPath();
-                context.moveTo(i, 0);
-                context.lineTo(i, this.maxHeight);
-                context.stroke();
-            }
-            for(let i = step; i < this.maxHeight; i += step){
-                context.beginPath();
-                context.moveTo(0, i);
-                context.lineTo(this.maxWidth, i);
+                context.moveTo(i * isVertical, i * isHorizontal);
+                context.lineTo(i * isVertical + length * isHorizontal, i * isHorizontal + length * isVertical);
                 context.stroke();
             }
         },
