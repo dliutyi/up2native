@@ -9,6 +9,8 @@ const webpackHotMiddleware = require("webpack-hot-middleware");
 const config = require('./webpack.config.js');
 const compiler = webpack(config);
 
+const AES = require("aes.js-wrapper");
+
 const mongo = require("mongodb").MongoClient;
 
 var server = http.createServer(app);
@@ -36,16 +38,18 @@ mongo.connect(url, params, function(err, client){
         console.log("user connected");
     
         socket.on("update", function(sheet){
-            console.log("update " + sheet.id);
+            const sid = sheet.id;
+            const sobjs = JSON.parse(AES.decrypt(sheet.objs, sid));
+            console.log("update " + JSON.stringify(sheet));
             sheets.updateOne(
                 {
-                    id: sheet.id
+                    id: sid
                 }, 
                 { 
                     $addToSet: { 
                         objs: { 
-                            id: sheet.objs[0].id, 
-                            type: sheet.objs[0].type
+                            id: sobjs[0].id, 
+                            type: sobjs[0].type
                         } 
                     } 
                 },  
@@ -53,12 +57,12 @@ mongo.connect(url, params, function(err, client){
             ).then(() => {
                 sheets.updateOne(
                 {
-                    id: sheet.id, 
-                    objs: { $elemMatch: { id: sheet.objs[0].id } } 
+                    id: sid, 
+                    objs: { $elemMatch: { id: sobjs[0].id } } 
                 }, 
                 { 
                     $addToSet: { 
-                        "objs.$.deltas": sheet.objs[0].deltas[0] 
+                        "objs.$.deltas": sobjs[0].deltas[0] 
                     } 
                 });
             });
@@ -70,8 +74,9 @@ mongo.connect(url, params, function(err, client){
             sheets.findOne({ 
                 id: sheet.id
             }).then((document) => {
-                io.emit("initialize", JSON.stringify(document));
-                console.log("state " + document);
+                const sobjs = AES.encrypt(JSON.stringify(document.objs), sheet.id);
+                io.emit("initialize", JSON.stringify({ id: sheet.id, objs: sobjs }));
+                console.log("state " + JSON.stringify({ id: sheet.id, objs: sobjs }));
             });
         });
     

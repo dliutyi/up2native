@@ -45,6 +45,7 @@
 <script>
 
 import io from "socket.io-client";
+import aes from 'aes.js-wrapper';
 
 import { Document, InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 import { debounce } from "./../objects/Helper.js";
@@ -101,15 +102,17 @@ export default {
                 return;
             }
 
+            const sobjs = JSON.parse(aes.decrypt(sheet.objs, sheet.id));
+
             console.log(sheet);
 
-            for(let item = 0, els = 0; item < sheet.objs.length; ++item){
-                if(sheet.objs[item].deltas != undefined){
-                    sheet.objs[item].deltas.sort(function(a, b){
+            for(let item = 0, els = 0; item < sobjs.length; ++item){
+                if(sobjs[item].deltas != undefined){
+                    sobjs[item].deltas.sort(function(a, b){
                         return a.datetime > b.datetime;
                     });
 
-                    let data = sheet.objs[item];
+                    let data = sobjs[item];
                     this.sheet.objs.push({ 
                         type: data.type, 
                         x: data.deltas[0].xy.x, 
@@ -121,11 +124,11 @@ export default {
             }
 
             this.$nextTick().then(() => {
-                for(let item = 0, els = 0; item < sheet.objs.length; ++item){
-                    if(sheet.objs[item].deltas != undefined){
+                for(let item = 0, els = 0; item < sobjs.length; ++item){
+                    if(sobjs[item].deltas != undefined){
                         this.els = this.els + 1;
 
-                        let data = sheet.objs[item];
+                        let data = sobjs[item];
                         for(let number = 1; number < data.deltas.length; ++number){
                             this.$refs.objs[this.els - 1].receiveUpdate({ deltas: [ data.deltas[number] ] });
                         }
@@ -139,7 +142,9 @@ export default {
                 return;
             }
 
-            let data = sheet.objs[0];
+            const sobjs = JSON.parse(aes.decrypt(sheet.objs, sheet.id));
+
+            let data = sobjs[0];
             let foundIndex = this.sheet.objs.findIndex((obj) => obj.id == data.id);
             console.log("isAlreadyCreate = " + (foundIndex > -1));
 
@@ -161,7 +166,8 @@ export default {
 
             let updateSheet = new Document();
             updateSheet.id = this.sheet.id;
-            updateSheet.objs = [ data ];
+            updateSheet.objs = aes.encrypt(JSON.stringify([ data ]), updateSheet.id);
+
             this.socket.emit("update", updateSheet);
         },
         handleResize(){
