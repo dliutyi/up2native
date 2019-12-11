@@ -20,6 +20,7 @@ class Instrument{
 
 class UpdateType{
     static Position = "Position";
+    static Size = "Size";
     static Text = "Text";
     static Dots = "Dots";
 }

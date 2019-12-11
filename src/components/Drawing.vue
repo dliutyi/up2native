@@ -41,49 +41,64 @@ export default {
         this.instrument.type = this.selectedInstrument;
         this.instrument.deltas.push({ xy: { x: this.left, y: this.top} });
 
-        this.width = this.maxWidth;
-        this.height = this.maxHeight;
-        this.dots.push({ x: this.left, y: this.top });
+        if(!this.isUpdated){
+            this.width = this.maxWidth;
+            this.height = this.maxHeight;
+            this.dots.push({ x: this.left, y: this.top });
+        }
 
         this.redrawDrawings = debounce(this.handleDeboubcing, 10);
     },
     mounted(){
-        this.moving.isActive = true;
-
         this.canvas = document.getElementById(this.id);
         this.context = this.canvas.getContext("2d");
+        
+        if(!this.isUpdated){
+            this.moving.isActive = true;
 
-        this.context.clearRect(0, 0, this.width, this.height);
+            this.context.clearRect(0, 0, this.width, this.height);
 
-        this.context.beginPath();
-        this.context.moveTo(this.dots[0].x, this.dots[0].y);
-
+            this.context.beginPath();
+            this.context.moveTo(this.dots[0].x, this.dots[0].y);
+        }
         this.$emit("handleObjDrag", { move: this.handleDrawingMove, up: this.handleDrawingEnd });
     },
     methods: {
         receiveUpdate(data){
-            let delta = data.deltas[0];
-            this.instrument.deltas.push(delta);
-            console.log("updates received in Drawing - " + delta.type);
-            switch(delta.type){
-                case UpdateType.Position:
-                    this.x = delta.xy.x;
-                    this.y = delta.xy.y;
-                    break;
-                case UpdateType.Dots:
-                    this.dots = delta.dots;
-                    this.redrawDrawings();
-                    break;
+            for(let delta of data.deltas){
+                this.instrument.deltas.push(delta);
+                console.log("updates received in Drawing - " + delta.type);
+                switch(delta.type){
+                    case UpdateType.Position:
+                        this.x = delta.xy.x;
+                        this.y = delta.xy.y;
+                        break;
+                    case UpdateType.Size:
+                        this.width = delta.xy.x;
+                        this.height = delta.xy.y;
+                        break;
+                    case UpdateType.Dots:
+                        console.log("dots = " + delta.dots.length);
+                        this.dots = delta.dots;
+                        this.redrawDrawings();
+                        break;
+                }
             }
         },
-        sendUpdate(delta){
+        sendUpdate(deltas){
             let updateInstrument = new Instrument();
             updateInstrument.id = this.instrument.id;
-            updateInstrument.type = this.instrument.type;
-            updateInstrument.deltas = [ delta ];
+            updateInstrument.type = InstrumentType.Drawing;
+            updateInstrument.deltas = deltas;
             this.$emit("handleUpdateFromClient", updateInstrument);
         },
-
+        resizeDrawings(){
+            let aabb = this.getBoundingBox();
+            this.x = aabb.LeftUp.x;
+            this.y = aabb.LeftUp.y;
+            this.width = aabb.RightDown.x - aabb.LeftUp.x;
+            this.height = aabb.RightDown.y - aabb.LeftUp.y;
+        },
         handleHover(isHover){
             if(!this.isActive){
                 this.color = isHover ? "#BBBBBB" : "transparent";
@@ -97,9 +112,9 @@ export default {
             this.context.clearRect(0, 0, this.width, this.height);
 
             this.context.beginPath();
-            this.context.moveTo(this.dots[0].x - this.x, this.dots[0].y - this.y);
+            this.context.moveTo(this.dots[0].x, this.dots[0].y);
             for(let dot of this.dots){
-                this.context.lineTo(dot.x - this.x, dot.y - this.y);
+                this.context.lineTo(dot.x, dot.y);
             }
             this.context.stroke();
         },
@@ -114,27 +129,27 @@ export default {
         handleMouseUp(event){
             if(this.moving.isFocus){
                 this.moving.isFocus = false;
-                this.sendUpdate({ type: UpdateType.Position, xy: { x: this.x, y: this.y } });
+                this.sendUpdate([{ type: UpdateType.Position, xy: { x: this.x, y: this.y } }]);
             }
         },
         handleDrawingEnd(event){
             if(this.moving.isActive){
                 this.moving.isActive = false;
 
-                let aabb = this.getBoundingBox();
+                this.resizeDrawings();
 
-                console.log(aabb.LeftUp.x + " " + aabb.LeftUp.y);
-                console.log(aabb.RightDown.x + " " + aabb.RightDown.y);
-
-                this.x = aabb.LeftUp.x;
-                this.y = aabb.LeftUp.y;
-                this.width = aabb.RightDown.x - aabb.LeftUp.x;
-                this.height = aabb.RightDown.y - aabb.LeftUp.y;
+                for(let i = 0; i < this.dots.length; ++i){
+                    this.dots[i].x -= this.x;
+                    this.dots[i].y -= this.y;
+                }
 
                 this.redrawDrawings();
 
-                this.sendUpdate({ type: UpdateType.Position, xy: { x: this.x, y: this.y } });
-                this.sendUpdate({ type: UpdateType.Dots, dots: this.dots });
+                this.sendUpdate([
+                    { type: UpdateType.Position, xy: { x: this.x, y: this.y } },
+                    { type: UpdateType.Size, xy: { x: this.width, y: this.height } },
+                    { type: UpdateType.Dots, dots: this.dots }
+                ]);
             }
         },
         handleDrawingMove(event){
@@ -198,7 +213,7 @@ export default {
             }	
         }
     },
-    props: ["top", "left", "id", "maxWidth", "maxHeight"]
+    props: ["top", "left", "id", "maxWidth", "maxHeight", "isUpdated"]
 };
 
 </script>
