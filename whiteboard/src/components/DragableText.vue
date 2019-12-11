@@ -38,31 +38,35 @@ export default {
     created() {
         this.instrument.id = this.id;
         this.instrument.type = InstrumentType.DragableText;
-        this.instrument.deltas.push({ xy: { x: this.left, y: this.top} });
+
+        if(!this.isUpdated){
+            this.sendUpdate([{ type: UpdateType.Position, xy: { x: this.left, y: this.top } }]);
+        }
 
         this.y = this.top - this.offsetX;
         this.x = this.left - this.offsetY;
     },
     methods: {
         receiveUpdate(data){
-            let delta = data.deltas[0];
-            this.instrument.deltas.push(delta);
-            console.log("updates received in DragableText - " + delta.type);
-            switch(delta.type){
-                case UpdateType.Position:
-                    this.x = delta.xy.x;
-                    this.y = delta.xy.y;
-                    break;
-                case UpdateType.Text:
-                    this.defaultText = delta.text;
-                    break;
+            for(let delta of data.deltas){
+                this.instrument.deltas.push(delta);
+                console.log("updates received in DragableText - " + delta.type);
+                switch(delta.type){
+                    case UpdateType.Position:
+                        this.x = delta.xy.x;
+                        this.y = delta.xy.y;
+                        break;
+                    case UpdateType.Text:
+                        this.defaultText = delta.text;
+                        break;
+                }
             }
         },
-        sendUpdate(delta){
+        sendUpdate(deltas){
             let updateInstrument = new Instrument();
             updateInstrument.id = this.instrument.id;
             updateInstrument.type = InstrumentType.DragableText;
-            updateInstrument.deltas = [ delta ];
+            updateInstrument.deltas = deltas;
             this.$emit("handleUpdateFromClient", updateInstrument);
         },
         handleHover(isHover){
@@ -80,7 +84,7 @@ export default {
         },
         handleMouseUp(event){
             if(this.moving.isActive){
-                this.sendUpdate({ type: UpdateType.Position, xy: { x: this.x, y: this.y } }); 
+                this.sendUpdate([{ type: UpdateType.Position, xy: { x: this.x, y: this.y } }]); 
                 this.moving.isActive = false;
             }
         },
@@ -111,7 +115,7 @@ export default {
             this.color = "transparent";
             this.defaultText = this.defaultText.trim();
             if(this.editable){
-                this.sendUpdate({ type: UpdateType.Text, text: this.defaultText });
+                this.sendUpdate([{ type: UpdateType.Text, text: this.defaultText }]);
                 this.editable = false;
             }
         },
@@ -151,7 +155,7 @@ export default {
             }
         }
     },
-    props: ["top", "left", "id"]
+    props: ["top", "left", "id", "isUpdated"]
 };
 
 </script>
