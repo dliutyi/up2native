@@ -9,8 +9,6 @@ const webpackHotMiddleware = require("webpack-hot-middleware");
 const config = require('./webpack.config.js');
 const compiler = webpack(config);
 
-const AES = require("aes.js-wrapper");
-
 const mongo = require("mongodb").MongoClient;
 
 var server = http.createServer(app);
@@ -39,8 +37,8 @@ mongo.connect(url, params, function(err, client){
     
         socket.on("update", function(sheet){
             const sid = sheet.id;
-            const sobjs = JSON.parse(AES.decrypt(sheet.objs, sid));
-            console.log("update " + JSON.stringify(sheet));
+            const sobjs = sheet.objs;
+            console.log("update " + sheet);
             sheets.updateOne(
                 {
                     id: sid
@@ -74,9 +72,9 @@ mongo.connect(url, params, function(err, client){
             sheets.findOne({ 
                 id: sheet.id
             }).then((document) => {
-                const sobjs = AES.encrypt(JSON.stringify(document.objs), sheet.id);
-                io.emit("initialize", JSON.stringify({ id: sheet.id, objs: sobjs }));
-                console.log("state " + JSON.stringify({ id: sheet.id, objs: sobjs }));
+                const sobjs = document.objs;
+                io.emit("initialize", { id: sheet.id, objs: sobjs });
+                console.log("state " + { id: sheet.id, objs: sobjs });
             });
         });
     
