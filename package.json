@@ -1,3 +1,5 @@
-"scripts": {
-    "start": "cd whiteboard && node server.js"
+{
+    "scripts": {
+        "start": "cd whiteboard && node server.js"
+    }
 }
