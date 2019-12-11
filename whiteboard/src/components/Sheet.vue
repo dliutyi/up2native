@@ -60,7 +60,6 @@
 <script>
 
 import io from "socket.io-client";
-import aes from 'aes.js-wrapper';
 
 import { Document, InstrumentType, Instrument, UpdateType } from "../../data/Domain.js"
 import { debounce } from "./../objects/Helper.js";
@@ -115,7 +114,6 @@ export default {
                 return;
             }
 
-            sheet = JSON.parse(sheet);
             console.log("syncing " + this.sheet.id);
 
             if(sheet == null || this.sheet.id !== sheet.id){
@@ -123,7 +121,7 @@ export default {
             }
 
             this.sheet.isLoaded = true;
-            const sobjs = JSON.parse(aes.decrypt(sheet.objs, sheet.id));
+            const sobjs = sheet.objs;
 
             console.log(sheet);
 
@@ -161,9 +159,7 @@ export default {
                 return;
             }
 
-            const sobjs = JSON.parse(aes.decrypt(sheet.objs, sheet.id));
-
-            let data = sobjs[0];
+            let data = sheet.objs[0];
             let foundIndex = this.sheet.objs.findIndex((obj) => obj.id == data.id);
             console.log("isAlreadyCreate = " + (foundIndex > -1));
 
@@ -193,7 +189,7 @@ export default {
 
             let updateSheet = new Document();
             updateSheet.id = this.sheet.id;
-            updateSheet.objs = aes.encrypt(JSON.stringify([ data ]), updateSheet.id);
+            updateSheet.objs = [ data ];
 
             this.socket.emit("update", updateSheet);
             this.nobj = null;
