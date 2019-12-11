@@ -1,6 +1,7 @@
 class Document{
     constructor(){
         this.id = 0;
+        this.isLoaded = false;
         this.objs = [];
     }
 }
@@ -20,6 +21,7 @@ class Instrument{
 
 class UpdateType{
     static Position = "Position";
+    static Size = "Size";
     static Text = "Text";
     static Dots = "Dots";
 }

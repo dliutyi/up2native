@@ -25,6 +25,20 @@
                 v-on:click.stop="handleMenuClick('Drawing')" />
         </div>
         <component 
+            v-if="nobj != null"
+            v-bind:is="nobj.type" 
+            v-bind:id="nobj.id"
+            v-bind:top="nobj.y" 
+            v-bind:left="nobj.x"
+            v-bind:maxWidth="nobj.maxWidth"
+            v-bind:maxHeight="nobj.maxHeight"
+            v-bind:isUpdated="nobj.isUpdated"
+            v-on:handleObjClick="handleObjClick"
+            v-on:handleObjDrag="handleObjDrag"
+            v-on:handleUpdateFromClient="handleUpdateFromClient"
+            >
+        </component>
+        <component 
             ref="objs"
             v-for="(obj, index) in sheet.objs" 
             v-bind:key="index" 
@@ -34,6 +48,7 @@
             v-bind:left="obj.x"
             v-bind:maxWidth="obj.maxWidth"
             v-bind:maxHeight="obj.maxHeight"
+            v-bind:isUpdated="obj.isUpdated"
             v-on:handleObjClick="handleObjClick"
             v-on:handleObjDrag="handleObjDrag"
             v-on:handleUpdateFromClient="handleUpdateFromClient"
@@ -65,6 +80,7 @@ export default {
             maxWidth: 3000,
             maxHeight: 3000,
             sheet: new Document(),
+            nobj: null,
             socket: io()
         }
     },
@@ -95,6 +111,10 @@ export default {
     },
     methods: {
         initializeSheet(sheet){
+            if(this.sheet.isLoaded){
+                return;
+            }
+
             sheet = JSON.parse(sheet);
             console.log("syncing " + this.sheet.id);
 
@@ -102,6 +122,7 @@ export default {
                 return;
             }
 
+            this.sheet.isLoaded = true;
             const sobjs = JSON.parse(aes.decrypt(sheet.objs, sheet.id));
 
             console.log(sheet);
@@ -119,7 +140,8 @@ export default {
                         y: data.deltas[0].xy.y, 
                         id: data.id, 
                         maxWidth: this.maxWidth, 
-                        maxHeight: this.maxHeight });
+                        maxHeight: this.maxHeight,
+                        isUpdated: true });
                 }
             }
 
@@ -127,11 +149,8 @@ export default {
                 for(let item = 0, els = 0; item < sobjs.length; ++item){
                     if(sobjs[item].deltas != undefined){
                         this.els = this.els + 1;
-
                         let data = sobjs[item];
-                        for(let number = 1; number < data.deltas.length; ++number){
-                            this.$refs.objs[this.els - 1].receiveUpdate({ deltas: [ data.deltas[number] ] });
-                        }
+                        this.$refs.objs[this.els - 1].receiveUpdate({ deltas: data.deltas });
                     }
                 }
             });
@@ -159,16 +178,25 @@ export default {
                 y: data.deltas[0].xy.y, 
                 id: data.id, 
                 maxWidth: this.maxWidth, 
-                maxHeight: this.maxHeight });
+                maxHeight: this.maxHeight,
+                isUpdated: true });
+
+            this.$nextTick().then(() => {
+                let foundIndex = this.sheet.objs.findIndex((obj) => obj.id == data.id);
+                this.$refs.objs[foundIndex].receiveUpdate({ deltas: data.deltas });
+            });
         },
         handleUpdateFromClient(data){
-            data.deltas[0].datetime = Date.now();
+            for(let i = 0; i < data.deltas.length; ++i){
+                data.deltas[i].datetime = Date.now() + i;
+            }
 
             let updateSheet = new Document();
             updateSheet.id = this.sheet.id;
             updateSheet.objs = aes.encrypt(JSON.stringify([ data ]), updateSheet.id);
 
             this.socket.emit("update", updateSheet);
+            this.nobj = null;
         },
         handleResize(){
             const centerX = (this.maxWidth - window.innerWidth) / 2;
@@ -204,12 +232,14 @@ export default {
             this.els = this.els + 1;
             const uid = "el" + this.els;
 
-            let instrument = new Instrument();
-            instrument.id = uid;
-            instrument.type = this.selectedInstrument;
-            instrument.deltas = [ { type: UpdateType.Position, xy: { x: event.pageX, y: event.pageY } } ];
-
-            this.handleUpdateFromClient(instrument);
+            this.nobj = { 
+                type: this.selectedInstrument, 
+                x: event.pageX, 
+                y: event.pageY, 
+                id: uid, 
+                maxWidth: this.maxWidth, 
+                maxHeight: this.maxHeight,
+                isUpdated: false };
         },
         handleMouseMove(event){
             if(this.dragging != null){

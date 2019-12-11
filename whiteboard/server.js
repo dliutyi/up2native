@@ -62,7 +62,7 @@ mongo.connect(url, params, function(err, client){
                 }, 
                 { 
                     $addToSet: { 
-                        "objs.$.deltas": sobjs[0].deltas[0] 
+                        "objs.$.deltas": { $each: sobjs[0].deltas }
                     } 
                 });
             });
