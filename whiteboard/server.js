@@ -21,7 +21,7 @@ app.use(webpackDevMiddleware(compiler, {
 
 app.use(webpackHotMiddleware(compiler));
 
-server.listen(3000, "0.0.0.0", function(){
+server.listen(process.env.PORT || 4000, function(){
     console.log("Example app listening on port 3000!\n");
 });
 
