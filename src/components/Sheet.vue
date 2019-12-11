@@ -124,6 +124,11 @@ export default {
 
             for(let item = 0, els = 0; item < sobjs.length; ++item){
                 if(sobjs[item].deltas != undefined){
+                    let foundIndex = this.sheet.objs.findIndex((obj) => obj.id == sobjs[item].id);
+                    if(foundIndex > -1){
+                        continue;
+                    }
+
                     sobjs[item].deltas.sort(function(a, b){
                         return a.datetime > b.datetime;
                     });
