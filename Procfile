@@ -1,3 +1,3 @@
 //Procfile
 
-web: cd whiteboard && npm start express
+web: npm start
