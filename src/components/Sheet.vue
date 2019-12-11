@@ -111,6 +111,10 @@ export default {
     },
     methods: {
         initializeSheet(sheet){
+            if(this.sheet.isLoaded){
+                return;
+            }
+
             sheet = JSON.parse(sheet);
             console.log("syncing " + this.sheet.id);
 
@@ -118,17 +122,13 @@ export default {
                 return;
             }
 
+            this.sheet.isLoaded = true;
             const sobjs = JSON.parse(aes.decrypt(sheet.objs, sheet.id));
 
             console.log(sheet);
 
             for(let item = 0, els = 0; item < sobjs.length; ++item){
                 if(sobjs[item].deltas != undefined){
-                    let foundIndex = this.sheet.objs.findIndex((obj) => obj.id == sobjs[item].id);
-                    if(foundIndex > -1){
-                        continue;
-                    }
-
                     sobjs[item].deltas.sort(function(a, b){
                         return a.datetime > b.datetime;
                     });
