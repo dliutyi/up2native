@@ -1,5 +1,5 @@
 {
     "scripts": {
-        "start": "cd whiteboard && npm rebuild node-sass && npm run express"
+        "start": "cd whiteboard && npm run express"
     }
 }
