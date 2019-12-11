@@ -1,6 +1,5 @@
 {
     "scripts": {   
-        "postinstall": "cd whiteboard && npm install",
         "start": "cd whiteboard && npm install && node server.js"
     }
 }
