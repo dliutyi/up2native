@@ -25,11 +25,9 @@ server.listen(process.env.PORT || 4000, function(){
     console.log("Example app listening on port 3000!\n");
 });
 
-const url = "mongodb://user_up2native:db123456789@ds353738.mlab.com:53738";
-const params = { useUnifiedTopology: true, useNewUrlParser: true };
-mongo.connect(url, params, function(err, client){
+const url = "mongodb://user_up2native:db123456789@ds353738.mlab.com:53738/heroku_gtnpx9mf";
+mongo.connect(url, function(err, db){
     console.log("connected");
-    var db = client.db("heroku_gtnpx9mf");
     var sheets = db.collection("sheets");
 
     io.on("connection", function(socket){
