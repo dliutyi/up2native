@@ -21,15 +21,16 @@ app.use(webpackDevMiddleware(compiler, {
 
 app.use(webpackHotMiddleware(compiler));
 
-server.listen(3000, "0.0.0.0", function(){
+server.listen(process.env.PORT || 4000, function(){
     console.log("Example app listening on port 3000!\n");
 });
 
-const url = "mongodb://127.0.0.1:27017/up2nativedb";
-const params = { useUnifiedTopology: true, useNewUrlParser: true };
+const url = "mongodb://heroku_gtnpx9mf:fcn6s9sk2tic8d8mj5pikaf2at@ds353738.mlab.com:53738/heroku_gtnpx9mf";
+const params = { useUnifiedTopology: true };
 mongo.connect(url, params, function(err, client){
+    console.log(err);
     console.log("connected");
-    var db = client.db("up2nativedb");
+    var db = client.db("heroku_gtnpx9mf");
     var sheets = db.collection("sheets");
 
     io.on("connection", function(socket){
