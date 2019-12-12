@@ -1,7 +1,6 @@
 class Document{
     constructor(){
         this.id = 0;
-        this.isLoaded = false;
         this.objs = [];
     }
 }
